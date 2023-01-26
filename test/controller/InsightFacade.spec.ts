@@ -91,12 +91,19 @@ describe("InsightFacade", function () {
 			"./test/resources/queries",
 			{
 				assertOnResult: (actual, expected) => {
-					// TODO add an assertion!
+					expect(actual).to.deep.equal(expected);
 				},
 				errorValidator: (error): error is PQErrorKind =>
 					error === "ResultTooLargeError" || error === "InsightError",
 				assertOnError: (actual, expected) => {
-					// TODO add an assertion!
+					if (expected === "InsightError") {
+						expect(actual).to.be.instanceof(InsightError);
+					} else if (expected === "ResultTooLargeError") {
+						expect(actual).to.be.instanceof(ResultTooLargeError);
+					} else {
+						// this should be unreachable, performQuery does not throw NotFoundError
+						expect.fail("UNEXPECTED ERROR");
+					}
 				},
 			}
 		);

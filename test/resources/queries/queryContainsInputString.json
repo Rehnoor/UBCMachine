@@ -1,0 +1,101 @@
+{
+	"title": "queryContainsInputString",
+	"input": {
+		"WHERE": {
+			"AND": [
+				{
+					"IS": {
+						"sections_title": "*econ*"
+					}
+				},
+				{
+					"NOT": {
+						"EQ": {
+							"sections_year": 1900
+						}
+					}
+				},
+				{
+					"LT": {
+						"sections_avg": 60
+					}
+				}
+			]
+		},
+		"OPTIONS": {
+			"COLUMNS": [
+				"sections_year",
+				"sections_dept",
+				"sections_id",
+				"sections_avg",
+				"sections_title"
+			]
+		}
+	},
+	"errorExpected": false,
+	"expected": [
+		{
+			"sections_year": 2013,
+			"sections_dept": "busi",
+			"sections_id": "300",
+			"sections_avg": 56.66,
+			"sections_title": "urb&rl es econ"
+		},
+		{
+			"sections_year": 2013,
+			"sections_dept": "busi",
+			"sections_id": "300",
+			"sections_avg": 56.67,
+			"sections_title": "urb&rl es econ"
+		},
+		{
+			"sections_year": 2007,
+			"sections_dept": "busi",
+			"sections_id": "300",
+			"sections_avg": 59.85,
+			"sections_title": "urb&rl es econ"
+		},
+		{
+			"sections_year": 2011,
+			"sections_dept": "busi",
+			"sections_id": "300",
+			"sections_avg": 58.6,
+			"sections_title": "urb&rl es econ"
+		},
+		{
+			"sections_year": 2010,
+			"sections_dept": "civl",
+			"sections_id": "403",
+			"sections_avg": 33,
+			"sections_title": "engr econ anlys"
+		},
+		{
+			"sections_year": 2011,
+			"sections_dept": "civl",
+			"sections_id": "403",
+			"sections_avg": 56.5,
+			"sections_title": "engr econ anlys"
+		},
+		{
+			"sections_year": 2012,
+			"sections_dept": "fre",
+			"sections_id": "295",
+			"sections_avg": 57.2,
+			"sections_title": "managerial econ"
+		},
+		{
+			"sections_year": 2008,
+			"sections_dept": "frst",
+			"sections_id": "319",
+			"sections_avg": 58,
+			"sections_title": "prin frst econ"
+		},
+		{
+			"sections_year": 2010,
+			"sections_dept": "mech",
+			"sections_id": "431",
+			"sections_avg": 53.86,
+			"sections_title": "eng economics"
+		}
+	]
+}
