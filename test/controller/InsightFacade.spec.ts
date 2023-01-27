@@ -214,14 +214,16 @@ describe("InsightFacade", function () {
 		});
 
 		type PQErrorKind = "ResultTooLargeError" | "InsightError";
-
+		// NOTE: queries/ordered contains tests which 1) throw errors, 2) specify an ordering
+		//       queries/unordered just needs to check that result vs expected contain same values
 		folderTest<unknown, Promise<InsightResult[]>, PQErrorKind>(
 			"Dynamic InsightFacade PerformQuery tests",
 			(input) => facade.performQuery(input),
-			"./test/resources/queries",
+			"./test/resources/queries/ordered",
 			{
 				assertOnResult: (actual, expected) => {
-					expect(actual).to.deep.equal(expected); // this might cause problems with ordering
+					// expect(actual).to.be.instanceof(InsightResult);
+					expect(actual).to.deep.equal(expected); // this might cause problems with ordering and tiebreakers
 				},
 				errorValidator: (error): error is PQErrorKind =>
 					error === "ResultTooLargeError" || error === "InsightError",
