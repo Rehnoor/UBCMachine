@@ -12,7 +12,6 @@ import {folderTest} from "@ubccpsc310/folder-test";
 import {expect, use} from "chai";
 import chaiAsPromised from "chai-as-promised";
 import {clearDisk, getContentFromArchives} from "../TestUtil";
-import exp from "constants";
 
 use(chaiAsPromised);
 
