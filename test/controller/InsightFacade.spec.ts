@@ -12,6 +12,7 @@ import {folderTest} from "@ubccpsc310/folder-test";
 import {expect, use} from "chai";
 import chaiAsPromised from "chai-as-promised";
 import {clearDisk, getContentFromArchives} from "../TestUtil";
+import exp from "constants";
 
 use(chaiAsPromised);
 
@@ -216,14 +217,20 @@ describe("InsightFacade", function () {
 		type PQErrorKind = "ResultTooLargeError" | "InsightError";
 		// NOTE: queries/ordered contains tests which 1) throw errors, 2) specify an ordering
 		//       queries/unordered just needs to check that result vs expected contain same values
-		folderTest<unknown, Promise<InsightResult[]>, PQErrorKind>(
+		// 		 TODO: having trouble figuring out how to assert on the ordered results, if tiebreakers happen
+		//             arbitrarily: how to check that results are in order based on one field (ie avg or department)
+		//			   when the test doesn't have access to the query?
+		folderTest<unknown, InsightResult[], PQErrorKind>(
 			"Dynamic InsightFacade PerformQuery tests",
 			(input) => facade.performQuery(input),
-			"./test/resources/queries/ordered",
+			"./test/resources/queries",
 			{
 				assertOnResult: (actual, expected) => {
-					// expect(actual).to.be.instanceof(InsightResult);
-					expect(actual).to.deep.equal(expected); // this might cause problems with ordering and tiebreakers
+					expect(actual).to.be.instanceOf(Array);
+					expect((actual as InsightResult[]).length).to.deep.equal(expected.length);
+					const sortedActual = (actual as InsightResult[]).sort();
+					const sortedExpected = expected.sort();
+					expect(sortedActual).to.deep.equal(sortedExpected);
 				},
 				errorValidator: (error): error is PQErrorKind =>
 					error === "ResultTooLargeError" || error === "InsightError",
