@@ -220,16 +220,39 @@ describe("InsightFacade", function () {
 		//             arbitrarily: how to check that results are in order based on one field (ie avg or department)
 		//			   when the test doesn't have access to the query?
 		folderTest<unknown, InsightResult[], PQErrorKind>(
-			"Dynamic InsightFacade PerformQuery tests",
+			"PerformQuery tests (unordered)",
 			(input) => facade.performQuery(input),
-			"./test/resources/queries",
+			"./test/resources/queries/unordered",
 			{
 				assertOnResult: (actual, expected) => {
 					expect(actual).to.be.instanceOf(Array);
-					expect((actual as InsightResult[]).length).to.deep.equal(expected.length);
-					const sortedActual = (actual as InsightResult[]).sort();
-					const sortedExpected = expected.sort();
-					expect(sortedActual).to.deep.equal(sortedExpected);
+					expect(actual).to.have.lengthOf(expected.length);
+					expect(actual).to.have.deep.members(expected);
+				},
+				errorValidator: (error): error is PQErrorKind =>
+					error === "ResultTooLargeError" || error === "InsightError",
+				assertOnError: (actual, expected) => {
+					if (expected === "InsightError") {
+						expect(actual).to.be.instanceof(InsightError);
+					} else if (expected === "ResultTooLargeError") {
+						expect(actual).to.be.instanceof(ResultTooLargeError);
+					} else {
+						// this should be unreachable, performQuery does not throw NotFoundError
+						expect.fail("UNEXPECTED ERROR");
+					}
+				},
+			}
+		);
+
+		folderTest<unknown, InsightResult[], PQErrorKind>(
+			"PerformQuery tests (ordered)",
+			(input) => facade.performQuery(input),
+			"./test/resources/queries/ordered",
+			{
+				assertOnResult: (actual, expected) => {
+					expect(actual).to.be.instanceOf(Array);
+					expect(actual).to.have.lengthOf(expected.length);
+					expect(actual).to.have.deep.ordered.members(expected);
 				},
 				errorValidator: (error): error is PQErrorKind =>
 					error === "ResultTooLargeError" || error === "InsightError",
