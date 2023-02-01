@@ -216,9 +216,6 @@ describe("InsightFacade", function () {
 		type PQErrorKind = "ResultTooLargeError" | "InsightError";
 		// NOTE: queries/ordered contains tests which 1) throw errors, 2) specify an ordering
 		//       queries/unordered just needs to check that result vs expected contain same values
-		// 		 TODO: having trouble figuring out how to assert on the ordered results, if tiebreakers happen
-		//             arbitrarily: how to check that results are in order based on one field (ie avg or department)
-		//			   when the test doesn't have access to the query?
 		folderTest<unknown, InsightResult[], PQErrorKind>(
 			"PerformQuery tests (unordered)",
 			(input) => facade.performQuery(input),
@@ -244,6 +241,8 @@ describe("InsightFacade", function () {
 			}
 		);
 
+		// NOTE: these tests only check for ordering of sections_avg
+		//		 query must have "sections_avg" in the COLUMNS argument, so we can actually access them
 		folderTest<unknown, InsightResult[], PQErrorKind>(
 			"PerformQuery tests (ordered)",
 			(input) => facade.performQuery(input),
@@ -252,7 +251,16 @@ describe("InsightFacade", function () {
 				assertOnResult: (actual, expected) => {
 					expect(actual).to.be.instanceOf(Array);
 					expect(actual).to.have.lengthOf(expected.length);
-					expect(actual).to.have.deep.ordered.members(expected);
+					expect(actual).to.have.deep.members(expected);
+					let minAvg = -1;
+					for (let result of (actual as InsightResult[])) {
+						if (minAvg === -1) {
+							minAvg = (result["sections_avg"] as number); // this is guaranteed to be a number
+						} else {
+							expect(result["sections_avg"]).to.be.gte(minAvg);
+							minAvg = (result["sections_avg"] as number);
+						}
+					}
 				},
 				errorValidator: (error): error is PQErrorKind =>
 					error === "ResultTooLargeError" || error === "InsightError",
