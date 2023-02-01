@@ -1,4 +1,5 @@
 import * as zip from "jszip";
+import * as fs from "fs-extra";
 
 import {IInsightFacade, InsightDataset, InsightDatasetKind, InsightError, InsightResult} from "./IInsightFacade";
 import {DataFrame, Section} from "./InsightDataFrame";
@@ -19,7 +20,7 @@ export default class InsightFacade implements IInsightFacade {
 
 	public addDataset(id: string, content: string, kind: InsightDatasetKind): Promise<string[]> {
 		// TODO: refactor
-		// 		 should be checking for duplicate id
+		// 		 should be checking for duplicate id in validateID
 		//		 should be persisting to disk
 		if (!this.validateID(id) || kind === InsightDatasetKind.Rooms) {
 			return Promise.reject(new InsightError("Invalid ID / kind parameter"));
@@ -59,7 +60,12 @@ export default class InsightFacade implements IInsightFacade {
 					for (let df of this.dataFrames) {
 						dataFrameIDs.push(df.getID());
 					}
-						// return dataFrameIDs;
+					// fs.writeJsonSync("./data/" + id + ".json", newDataFrame);
+					fs.writeJson("./data/" + id + ".json", newDataFrame, (err) =>  {
+						if (err) {
+							return console.error(err);
+						}
+					});
 					resolve(dataFrameIDs);
 				} else {
 					reject(new InsightError("Zip file contained no valid sections: check formatting"));
