@@ -1,0 +1,374 @@
+{
+	"title": "queryStartsWithInputString",
+	"input": {
+		"WHERE": {
+			"AND": [
+				{
+					"IS": {
+						"sections_title": "intr*"
+					}
+				},
+				{
+					"NOT": {
+						"EQ": {
+							"sections_year": 1900
+						}
+					}
+				},
+				{
+					"LT": {
+						"sections_avg": 60
+					}
+				}
+			]
+		},
+		"OPTIONS": {
+			"COLUMNS": [
+				"sections_year",
+				"sections_dept",
+				"sections_id",
+				"sections_avg",
+				"sections_title"
+			]
+		}
+	},
+	"errorExpected": false,
+	"expected": [
+		{
+			"sections_year": 2010,
+			"sections_dept": "apbi",
+			"sections_id": "200",
+			"sections_avg": 59.31,
+			"sections_title": "intr soil scie"
+		},
+		{
+			"sections_year": 2015,
+			"sections_dept": "asia",
+			"sections_id": "101",
+			"sections_avg": 57.33,
+			"sections_title": "intr modern asia"
+		},
+		{
+			"sections_year": 2013,
+			"sections_dept": "busi",
+			"sections_id": "294",
+			"sections_avg": 58.25,
+			"sections_title": "intr mgmt acct"
+		},
+		{
+			"sections_year": 2014,
+			"sections_dept": "busi",
+			"sections_id": "294",
+			"sections_avg": 59.14,
+			"sections_title": "intr mgmt acct"
+		},
+		{
+			"sections_year": 2009,
+			"sections_dept": "chem",
+			"sections_id": "312",
+			"sections_avg": 55.31,
+			"sections_title": "intr quantm mech"
+		},
+		{
+			"sections_year": 2012,
+			"sections_dept": "frst",
+			"sections_id": "231",
+			"sections_avg": 54.13,
+			"sections_title": "intr biometrics"
+		},
+		{
+			"sections_year": 2011,
+			"sections_dept": "frst",
+			"sections_id": "231",
+			"sections_avg": 59.91,
+			"sections_title": "intr biometrics"
+		},
+		{
+			"sections_year": 2013,
+			"sections_dept": "frst",
+			"sections_id": "231",
+			"sections_avg": 46.59,
+			"sections_title": "intr biometrics"
+		},
+		{
+			"sections_year": 2008,
+			"sections_dept": "frst",
+			"sections_id": "231",
+			"sections_avg": 51,
+			"sections_title": "intr biometrics"
+		},
+		{
+			"sections_year": 2007,
+			"sections_dept": "frst",
+			"sections_id": "231",
+			"sections_avg": 54.38,
+			"sections_title": "intr biometrics"
+		},
+		{
+			"sections_year": 2007,
+			"sections_dept": "frst",
+			"sections_id": "231",
+			"sections_avg": 49.14,
+			"sections_title": "intr biometrics"
+		},
+		{
+			"sections_year": 2010,
+			"sections_dept": "frst",
+			"sections_id": "231",
+			"sections_avg": 56.33,
+			"sections_title": "intr biometrics"
+		},
+		{
+			"sections_year": 2013,
+			"sections_dept": "frst",
+			"sections_id": "231",
+			"sections_avg": 57.5,
+			"sections_title": "intr biometrics"
+		},
+		{
+			"sections_year": 2014,
+			"sections_dept": "lled",
+			"sections_id": "200",
+			"sections_avg": 57,
+			"sections_title": "intro acad writ"
+		},
+		{
+			"sections_year": 2014,
+			"sections_dept": "lled",
+			"sections_id": "200",
+			"sections_avg": 52.47,
+			"sections_title": "intro acad writ"
+		},
+		{
+			"sections_year": 2014,
+			"sections_dept": "lled",
+			"sections_id": "200",
+			"sections_avg": 54.77,
+			"sections_title": "intro acad writ"
+		},
+		{
+			"sections_year": 2014,
+			"sections_dept": "lled",
+			"sections_id": "200",
+			"sections_avg": 48.9,
+			"sections_title": "intro acad writ"
+		},
+		{
+			"sections_year": 2014,
+			"sections_dept": "lled",
+			"sections_id": "200",
+			"sections_avg": 56.31,
+			"sections_title": "intro acad writ"
+		},
+		{
+			"sections_year": 2014,
+			"sections_dept": "lled",
+			"sections_id": "200",
+			"sections_avg": 52.2,
+			"sections_title": "intro acad writ"
+		},
+		{
+			"sections_year": 2014,
+			"sections_dept": "lled",
+			"sections_id": "200",
+			"sections_avg": 53.21,
+			"sections_title": "intro acad writ"
+		},
+		{
+			"sections_year": 2014,
+			"sections_dept": "lled",
+			"sections_id": "200",
+			"sections_avg": 49.73,
+			"sections_title": "intro acad writ"
+		},
+		{
+			"sections_year": 2014,
+			"sections_dept": "lled",
+			"sections_id": "200",
+			"sections_avg": 52.2,
+			"sections_title": "intro acad writ"
+		},
+		{
+			"sections_year": 2014,
+			"sections_dept": "lled",
+			"sections_id": "200",
+			"sections_avg": 59.93,
+			"sections_title": "intro acad writ"
+		},
+		{
+			"sections_year": 2014,
+			"sections_dept": "lled",
+			"sections_id": "200",
+			"sections_avg": 49.86,
+			"sections_title": "intro acad writ"
+		},
+		{
+			"sections_year": 2014,
+			"sections_dept": "lled",
+			"sections_id": "200",
+			"sections_avg": 57.27,
+			"sections_title": "intro acad writ"
+		},
+		{
+			"sections_year": 2014,
+			"sections_dept": "lled",
+			"sections_id": "200",
+			"sections_avg": 53.73,
+			"sections_title": "intro acad writ"
+		},
+		{
+			"sections_year": 2016,
+			"sections_dept": "lled",
+			"sections_id": "200",
+			"sections_avg": 52.4,
+			"sections_title": "intro acad writ"
+		},
+		{
+			"sections_year": 2016,
+			"sections_dept": "lled",
+			"sections_id": "200",
+			"sections_avg": 57.33,
+			"sections_title": "intro acad writ"
+		},
+		{
+			"sections_year": 2016,
+			"sections_dept": "lled",
+			"sections_id": "200",
+			"sections_avg": 51.14,
+			"sections_title": "intro acad writ"
+		},
+		{
+			"sections_year": 2016,
+			"sections_dept": "lled",
+			"sections_id": "200",
+			"sections_avg": 56.43,
+			"sections_title": "intro acad writ"
+		},
+		{
+			"sections_year": 2016,
+			"sections_dept": "lled",
+			"sections_id": "200",
+			"sections_avg": 52.69,
+			"sections_title": "intro acad writ"
+		},
+		{
+			"sections_year": 2016,
+			"sections_dept": "lled",
+			"sections_id": "200",
+			"sections_avg": 59.43,
+			"sections_title": "intro acad writ"
+		},
+		{
+			"sections_year": 2016,
+			"sections_dept": "lled",
+			"sections_id": "200",
+			"sections_avg": 58.47,
+			"sections_title": "intro acad writ"
+		},
+		{
+			"sections_year": 2016,
+			"sections_dept": "lled",
+			"sections_id": "200",
+			"sections_avg": 59.23,
+			"sections_title": "intro acad writ"
+		},
+		{
+			"sections_year": 2016,
+			"sections_dept": "lled",
+			"sections_id": "200",
+			"sections_avg": 55.86,
+			"sections_title": "intro acad writ"
+		},
+		{
+			"sections_year": 2016,
+			"sections_dept": "lled",
+			"sections_id": "200",
+			"sections_avg": 57.38,
+			"sections_title": "intro acad writ"
+		},
+		{
+			"sections_year": 2016,
+			"sections_dept": "lled",
+			"sections_id": "200",
+			"sections_avg": 57.79,
+			"sections_title": "intro acad writ"
+		},
+		{
+			"sections_year": 2015,
+			"sections_dept": "lled",
+			"sections_id": "200",
+			"sections_avg": 55.43,
+			"sections_title": "intro acad writ"
+		},
+		{
+			"sections_year": 2015,
+			"sections_dept": "lled",
+			"sections_id": "200",
+			"sections_avg": 47.29,
+			"sections_title": "intro acad writ"
+		},
+		{
+			"sections_year": 2015,
+			"sections_dept": "lled",
+			"sections_id": "200",
+			"sections_avg": 55.19,
+			"sections_title": "intro acad writ"
+		},
+		{
+			"sections_year": 2015,
+			"sections_dept": "lled",
+			"sections_id": "200",
+			"sections_avg": 51.13,
+			"sections_title": "intro acad writ"
+		},
+		{
+			"sections_year": 2015,
+			"sections_dept": "lled",
+			"sections_id": "200",
+			"sections_avg": 58.6,
+			"sections_title": "intro acad writ"
+		},
+		{
+			"sections_year": 2015,
+			"sections_dept": "lled",
+			"sections_id": "200",
+			"sections_avg": 47.82,
+			"sections_title": "intro acad writ"
+		},
+		{
+			"sections_year": 2010,
+			"sections_dept": "math",
+			"sections_id": "300",
+			"sections_avg": 59.78,
+			"sections_title": "intr complex var"
+		},
+		{
+			"sections_year": 2013,
+			"sections_dept": "math",
+			"sections_id": "312",
+			"sections_avg": 58.24,
+			"sections_title": "intr number thry"
+		},
+		{
+			"sections_year": 2009,
+			"sections_dept": "musc",
+			"sections_id": "103",
+			"sections_avg": 59,
+			"sections_title": "intro musc thry"
+		},
+		{
+			"sections_year": 2014,
+			"sections_dept": "phys",
+			"sections_id": "157",
+			"sections_avg": 55.25,
+			"sections_title": "intr phys eng i"
+		},
+		{
+			"sections_year": 2016,
+			"sections_dept": "poli",
+			"sections_id": "100",
+			"sections_avg": 54.01,
+			"sections_title": "intro to politic"
+		}
+	]
+}
