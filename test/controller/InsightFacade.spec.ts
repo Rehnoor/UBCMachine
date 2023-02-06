@@ -3,8 +3,8 @@ import {
 	InsightDatasetKind,
 	InsightError,
 	InsightResult,
-	ResultTooLargeError,
-	NotFoundError
+	NotFoundError,
+	ResultTooLargeError
 } from "../../src/controller/IInsightFacade";
 import InsightFacade from "../../src/controller/InsightFacade";
 
@@ -20,11 +20,12 @@ describe("InsightFacade", function () {
 
 	// Declare datasets used in tests. You should add more datasets like this!
 	let sections: string;
+	let smallDataset: string;
 
 	before(function () {
 		// This block runs once and loads the datasets.
 		sections = getContentFromArchives("pair.zip");
-
+		smallDataset = getContentFromArchives("smallValidSet.zip");
 		// Just in case there is anything hanging around from a previous run of the test suite
 		clearDisk();
 	});
@@ -103,30 +104,29 @@ describe("InsightFacade", function () {
 				const result = facade.addDataset("1288", sections, InsightDatasetKind.Rooms);
 				return expect(result).to.eventually.be.rejectedWith(InsightError);
 			});
-
 			it("should reject add with duplicate ID", function () {
-				const result = facade.addDataset("ubc123", sections, InsightDatasetKind.Sections)
-					.then(() => facade.addDataset("ubc123", sections, InsightDatasetKind.Sections));
+				const result = facade.addDataset("ubc123", smallDataset, InsightDatasetKind.Sections)
+					.then(() => facade.addDataset("ubc123", smallDataset, InsightDatasetKind.Sections));
 				return expect(result).to.eventually.be.rejectedWith(InsightError);
 			});
 
-			it("should add this valid dataset", function() {
+			it("should add this valid dataset (full pair dataset)", function() {
 				const result = facade.addDataset("ubc-pairdata", sections, InsightDatasetKind.Sections);
 				return expect(result).to.eventually.deep.equal(["ubc-pairdata"]);
 			});
+			it("should add this small valid dataset", function() {
+				const result = facade.addDataset("smallSet", smallDataset, InsightDatasetKind.Sections);
+				return expect(result).to.eventually.deep.equal(["smallSet"]);
+			});
 
 			it("should add two valid datasets", async function() {
-				await facade.addDataset("ubc-pairdata0", sections, InsightDatasetKind.Sections);
-				const result = await facade.addDataset("ubc-pairdata1", sections, InsightDatasetKind.Sections);
+				await facade.addDataset("ubc-data0", smallDataset, InsightDatasetKind.Sections);
+				const result = await facade.addDataset("ubc-data1", smallDataset, InsightDatasetKind.Sections);
 				expect(result.length).to.deep.equal(2);
-				expect(result).to.contain("ubc-pairdata0");
-				expect(result).to.contain("ubc-pairdata1");
+				expect(result).to.have.members(["ubc-data0", "ubc-data1"]);
 			});
 		});
 		describe("removeDataset", function() {
-			beforeEach(async function() {
-				await facade.addDataset("ubc-pairdata", sections, InsightDatasetKind.Sections);
-			});
 			it("should reject remove invalid ID (empty string)", function() {
 				const result = facade.removeDataset("");
 				return expect(result).to.eventually.be.rejectedWith(InsightError);
@@ -142,27 +142,30 @@ describe("InsightFacade", function () {
 				return expect(result).to.eventually.be.rejectedWith(InsightError);
 			});
 
-			it("should reject remove valid ID not found", function () {
+			it("should reject remove valid ID not found", async function () {
+				await facade.addDataset("smallData", smallDataset, InsightDatasetKind.Sections);
 				const result = facade.removeDataset("1234abacus");
 				return expect(result).to.eventually.be.rejectedWith(NotFoundError);
 			});
 
-			it("should successfully remove the dataset", function () {
-				const result = facade.removeDataset("ubc-pairdata");
-				return expect(result).to.eventually.deep.equal("ubc-pairdata");
+			it("should successfully remove the dataset", async function () {
+				await facade.addDataset("smallData", smallDataset, InsightDatasetKind.Sections);
+				const result = facade.removeDataset("smallData");
+				return expect(result).to.eventually.deep.equal("smallData");
 			});
 
 			it("should remove first dset successfully, fail to remove again", async function() {
+				await facade.addDataset("smallData", smallDataset, InsightDatasetKind.Sections);
 				try {
-					const result1 = await facade.removeDataset("ubc-pairdata");
-					expect(result1).to.deep.equal("ubc-pairdata");
+					const result1 = await facade.removeDataset("smallData");
+					expect(result1).to.deep.equal("smallData");
 				} catch (e) {
 					expect.fail("Should not reject!");
 				}
 
 				try {
-					const result2 = await facade.removeDataset("ubc-pairdata");
-					expect.fail("ubc-pairdata should no longer exist");
+					await facade.removeDataset("smallData");
+					expect.fail("smallData should no longer exist");
 				} catch (e) {
 					expect(e).to.be.instanceof(NotFoundError);
 				}
@@ -176,12 +179,12 @@ describe("InsightFacade", function () {
 			});
 
 			it("should fulfill list with one added dataset", async function() {
-				await facade.addDataset("dset1", sections, InsightDatasetKind.Sections);
+				await facade.addDataset("dset1", smallDataset, InsightDatasetKind.Sections);
 				const result = facade.listDatasets();
 				return expect(result).eventually.to.deep.equal([{
 					id : "dset1",
 					kind : InsightDatasetKind.Sections,
-					numRows : 64612
+					numRows : 16
 				}]);
 
 			});
@@ -216,20 +219,51 @@ describe("InsightFacade", function () {
 		type PQErrorKind = "ResultTooLargeError" | "InsightError";
 		// NOTE: queries/ordered contains tests which 1) throw errors, 2) specify an ordering
 		//       queries/unordered just needs to check that result vs expected contain same values
-		// 		 TODO: having trouble figuring out how to assert on the ordered results, if tiebreakers happen
-		//             arbitrarily: how to check that results are in order based on one field (ie avg or department)
-		//			   when the test doesn't have access to the query?
 		folderTest<unknown, InsightResult[], PQErrorKind>(
-			"Dynamic InsightFacade PerformQuery tests",
+			"PerformQuery tests (unordered)",
 			(input) => facade.performQuery(input),
-			"./test/resources/queries",
+			"./test/resources/queries/unordered",
 			{
 				assertOnResult: (actual, expected) => {
 					expect(actual).to.be.instanceOf(Array);
-					expect((actual as InsightResult[]).length).to.deep.equal(expected.length);
-					const sortedActual = (actual as InsightResult[]).sort();
-					const sortedExpected = expected.sort();
-					expect(sortedActual).to.deep.equal(sortedExpected);
+					expect(actual).to.have.lengthOf(expected.length);
+					expect(actual).to.have.deep.members(expected);
+				},
+				errorValidator: (error): error is PQErrorKind =>
+					error === "ResultTooLargeError" || error === "InsightError",
+				assertOnError: (actual, expected) => {
+					if (expected === "InsightError") {
+						expect(actual).to.be.instanceof(InsightError);
+					} else if (expected === "ResultTooLargeError") {
+						expect(actual).to.be.instanceof(ResultTooLargeError);
+					} else {
+						// this should be unreachable, performQuery does not throw NotFoundError
+						expect.fail("UNEXPECTED ERROR");
+					}
+				},
+			}
+		);
+
+		// NOTE: these tests only check for ordering of sections_avg
+		//		 query must have "sections_avg" in the COLUMNS argument, so we can actually access them
+		folderTest<unknown, InsightResult[], PQErrorKind>(
+			"PerformQuery tests (ordered)",
+			(input) => facade.performQuery(input),
+			"./test/resources/queries/ordered",
+			{
+				assertOnResult: (actual, expected) => {
+					expect(actual).to.be.instanceOf(Array);
+					expect(actual).to.have.lengthOf(expected.length);
+					expect(actual).to.have.deep.members(expected);
+					let minAvg = -1;
+					for (let result of (actual as InsightResult[])) {
+						if (minAvg === -1) {
+							minAvg = (result["sections_avg"] as number); // this is guaranteed to be a number
+						} else {
+							expect(result["sections_avg"]).to.be.gte(minAvg);
+							minAvg = (result["sections_avg"] as number);
+						}
+					}
 				},
 				errorValidator: (error): error is PQErrorKind =>
 					error === "ResultTooLargeError" || error === "InsightError",
