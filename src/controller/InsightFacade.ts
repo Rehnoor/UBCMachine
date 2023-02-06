@@ -14,7 +14,6 @@ export default class InsightFacade implements IInsightFacade {
 	constructor() {
 		console.log("InsightFacadeImpl::init()");
 		// TODO: read all datasets from data directory
-		//		 do we want to have all added datasets cached in memory? feeling yes...
 		this.dataFrames = [];
 	}
 
