@@ -3,6 +3,7 @@ import * as fs from "fs-extra";
 
 import {IInsightFacade, InsightDataset, InsightDatasetKind, InsightError, InsightResult} from "./IInsightFacade";
 import {DataFrame, Section} from "./InsightDataFrame";
+import {outputJsonSync} from "fs-extra";
 
 /**
  * This is the main programmatic entry point for the project.
@@ -10,10 +11,15 @@ import {DataFrame, Section} from "./InsightDataFrame";
  *
  */
 export default class InsightFacade implements IInsightFacade {
-	private dataFrames: DataFrame[];
+	private readonly dataFrames: DataFrame[];
 	constructor() {
-		// TODO: read all datasets from data directory
 		this.dataFrames = [];
+		fs.ensureDirSync("./data/");
+		fs.readdirSync("./data/").forEach((jsonDataFrame) => {
+			// we only write valid json to disk, is it safe to assume that the data read is well formatted?
+			let dataFrame: DataFrame = JSON.parse(jsonDataFrame);
+			this.dataFrames.push(dataFrame);
+		});
 	}
 
 	public addDataset(id: string, content: string, kind: InsightDatasetKind): Promise<string[]> {
@@ -34,15 +40,14 @@ export default class InsightFacade implements IInsightFacade {
 					dataFrameIDs.push(df.getID());
 				}
 				// NOTE: should we be doing any error handling with writing to disk...
-				fs.ensureDirSync("./data");
-				fs.writeJsonSync("./data/" + id + ".json", newDataFrame);
+				outputJsonSync("./data/" + id + ".json", newDataFrame);
 				resolve(dataFrameIDs);
 			}).catch((error) => {
 				reject(new InsightError("An error occurred during parsing process"));
 			});
 		});
 	}
-	// parses json section data from courseArray into dataFrame
+	// parses json section data from courseArray and pushes into dataFrame
 	private parseStringDataToSections(courseArray: string[], dataFrame: DataFrame) {
 		let requiredSectionKeys = ["id", "Course", "Title", "Professor", "Subject",
 			"Year", "Avg", "Pass", "Fail", "Audit"];
