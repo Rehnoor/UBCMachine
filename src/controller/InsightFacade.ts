@@ -1,7 +1,14 @@
 import * as zip from "jszip";
 import * as fs from "fs-extra";
 
-import {IInsightFacade, InsightDataset, InsightDatasetKind, InsightError, InsightResult} from "./IInsightFacade";
+import {
+	IInsightFacade,
+	InsightDataset,
+	InsightDatasetKind,
+	InsightError,
+	InsightResult,
+	NotFoundError
+} from "./IInsightFacade";
 import {DataFrame, Section} from "./InsightDataFrame";
 import {outputJsonSync} from "fs-extra";
 
@@ -25,6 +32,11 @@ export default class InsightFacade implements IInsightFacade {
 	public addDataset(id: string, content: string, kind: InsightDatasetKind): Promise<string[]> {
 		if (!this.validateID(id) || kind === InsightDatasetKind.Rooms) {
 			return Promise.reject(new InsightError("Invalid ID / kind parameter"));
+		}
+		for (let dataSet of this.dataFrames) {
+			if (dataSet.getID() === id) {
+				return Promise.reject(new InsightError("This ID has already been added"));
+			}
 		}
 		let newDataFrame = new DataFrame(id, kind);
 		return new Promise<string[]>((resolve, reject) => {
@@ -102,16 +114,23 @@ export default class InsightFacade implements IInsightFacade {
 				hasCharacters = true;
 			}
 		}
-		for (let dataSet of this.dataFrames) {
-			if (dataSet.getID() === id) {
-				return false;
-			}
-		}
 		return hasCharacters;
 	}
 
 	public removeDataset(id: string): Promise<string> {
-		return Promise.reject("Not implemented.");
+		if (!this.validateID(id)) {
+			return Promise.reject(new InsightError("Invalid ID format"));
+		}
+		return new Promise<string>((resolve, reject) => {
+			for (let dataSetIndex in this.dataFrames) {
+				if (this.dataFrames[dataSetIndex].getID() === id) {
+					this.dataFrames.splice(Number(dataSetIndex), 1); // Remove from program memory
+					fs.removeSync("./data/" + id + ".json"); // Remove from disk memory
+					resolve(id);
+				}
+			}
+			reject(new NotFoundError("A DataSet with given ID was not found"));
+		});
 	}
 
 	public performQuery(query: unknown): Promise<InsightResult[]> {
@@ -120,6 +139,14 @@ export default class InsightFacade implements IInsightFacade {
 	}
 
 	public listDatasets(): Promise<InsightDataset[]> {
-		return Promise.reject("Not implemented.");
+		let result: InsightDataset[] = [];
+		for (let dataSet of this.dataFrames) {
+			result.push({
+				id: dataSet.getID(),
+				kind: dataSet.getKind(),
+				numRows: dataSet.getNumRows()
+			});
+		}
+		return Promise.resolve(result);
 	}
 }
