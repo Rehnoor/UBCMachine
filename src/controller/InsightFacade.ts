@@ -10,7 +10,6 @@ import {
 	NotFoundError
 } from "./IInsightFacade";
 import {DataFrame, Section} from "./InsightDataFrame";
-import {outputJsonSync} from "fs-extra";
 
 /**
  * This is the main programmatic entry point for the project.
@@ -20,13 +19,27 @@ import {outputJsonSync} from "fs-extra";
 export default class InsightFacade implements IInsightFacade {
 	private readonly dataFrames: DataFrame[];
 	constructor() {
+		// TODO: we cannot make ANY assumptions about the contents of the data directory
+		// 		 --> make sure that we only create new dataframes from good objects (that have all keys)
+		//		 --> must be changed if we store anything other than datasets in the data directory
 		this.dataFrames = [];
 		fs.ensureDirSync("./data/");
-		fs.readdirSync("./data/").forEach((jsonDataFrame) => {
-			// we only write valid json to disk, is it safe to assume that the data read is well formatted?
-			let dataFrame: DataFrame = JSON.parse(jsonDataFrame);
-			this.dataFrames.push(dataFrame);
-		});
+		let fileNames = fs.readdirSync("./data/");
+		for (let fileName of fileNames) {
+			if (fileName.includes(".json")) {
+				let dataFrame = fs.readJsonSync("./data/" + fileName);
+				this.dataFrames.push(this.createDataFrameFromObject(dataFrame));
+			}
+			// NOTE: need to actually create a "new DataFrame" instance or else we can't call DataFrame methods
+			//       like getID etc
+		}
+	}
+	// MAKE SURE the object passed to this method has all the fields of a DataFrame
+	private createDataFrameFromObject(obj: object): DataFrame {
+		// This feels a bit hacky
+		// must be changed if we store anything else in the data directory other than persisted datasets
+		let result = new DataFrame("this should be changed", InsightDatasetKind.Rooms);
+		return Object.assign(result, obj);
 	}
 
 	public addDataset(id: string, content: string, kind: InsightDatasetKind): Promise<string[]> {
@@ -52,7 +65,7 @@ export default class InsightFacade implements IInsightFacade {
 					dataFrameIDs.push(df.getID());
 				}
 				// NOTE: should we be doing any error handling with writing to disk...
-				outputJsonSync("./data/" + id + ".json", newDataFrame);
+				fs.outputJsonSync("./data/" + id + ".json", newDataFrame);
 				resolve(dataFrameIDs);
 			}).catch((error) => {
 				reject(new InsightError("An error occurred during parsing process"));
