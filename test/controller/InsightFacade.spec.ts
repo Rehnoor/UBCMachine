@@ -280,4 +280,22 @@ describe("InsightFacade", function () {
 			}
 		);
 	});
+	describe("SaveToDisk", function () {
+		it("should add dataset (just setup for next test)", function () {
+			facade = new InsightFacade();
+			const result = facade.addDataset("shouldPersist", smallDataset, InsightDatasetKind.Sections);
+			return expect(result).to.eventually.deep.equal(["shouldPersist"]);
+			// this is where the system "crashes" and we should ensure dataset remains
+		});
+		// NOTE: for this test to pass, must run the whole SaveToDisk describe at once
+		it("should have the previously added dataset", function () {
+			facade = new InsightFacade();
+			const result = facade.listDatasets();
+			return expect(result).to.eventually.deep.equal([{
+				id: "shouldPersist",
+				kind: InsightDatasetKind.Sections,
+				numRows: 16
+			}]);
+		});
+	});
 });
