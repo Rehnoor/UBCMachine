@@ -170,6 +170,7 @@ export default class InsightFacade implements IInsightFacade {
 			reject(new NotFoundError("A DataSet with given ID was not found"));
 		});
 	}
+	// function to traverse tree (use if needed)
 	private printTree(tree: Node) {
 		if (tree.getChildren().length === 0) {
 			console.log(tree.nodeMessage());
@@ -180,12 +181,16 @@ export default class InsightFacade implements IInsightFacade {
 		}
 	}
 	public performQuery(query: unknown): Promise<InsightResult[]> {
+		// TODO: Reject since query is null
 		if (query === null) {
 			return Promise.resolve([]);
+			// if query is object then its good
 		} else if (typeof query === "object") {
-			console.log("query is an object so we good");
+			// WHERE and OPTIONS block are both required
 			if (Object.keys(query).includes("WHERE") && Object.keys(query).includes("OPTIONS")) {
+				// finds indexOf where since it is not required for it to be first block in query
 				let x = Object.keys(query).indexOf("WHERE");
+				// if query block is empty, return entire dataset IFF it has less than 5000 results
 				if (Object.values(query)[x].length === 0) {
 					return Promise.resolve([]); // return all objects and format according to OPTIONS
 				}
@@ -193,7 +198,7 @@ export default class InsightFacade implements IInsightFacade {
 				let topLevelVals = Object.values(query);
 				let whereIndex = topLevelKeys.indexOf("WHERE");
 				let whereVal: any = topLevelVals[whereIndex];
-				console.log(whereVal);
+				console.log(whereVal); // prints the JSON of WHERE portion
 				let queryTree: Node = this.query.buildWhereTree(whereVal);
 				// this.printTree(queryTree);
 			}

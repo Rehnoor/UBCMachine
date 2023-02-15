@@ -1,4 +1,5 @@
 import {InvalidNode, LogicNode, MathNode, Node, StringNode} from "./InsightNode";
+import {InsightError} from "./IInsightFacade";
 
 export class InsightQuery {
 	public isLogicComparison(key: any): boolean {
@@ -12,6 +13,16 @@ export class InsightQuery {
 	}
 	public isNegation(key: any): boolean {
 		return key === "NOT";
+	}
+	public validateSField(sfield: string) {
+		let bOne: boolean = sfield === "dept" || sfield === "id" || sfield === "instructor";
+		let bTwo: boolean = sfield === "title" || sfield === "uuid";
+		return bOne || bTwo;
+	}
+	public validateMField(mfield: string) {
+		let bOne: boolean = mfield === "avg" || mfield === "pass" || mfield === "fail";
+		let bTwo: boolean = mfield === "audit" || mfield === "year";
+		return bOne || bTwo;
 	}
 	private handleLogicComparisonNegation(filter: any): Node {
 		let filterList: any = Object.values(filter)[0];
@@ -34,45 +45,52 @@ export class InsightQuery {
 			return lNode;
 		}
 	}
-	private handleNegation(filter: any): Node {
+	private handleStringComparisonNegation(filter: any): Node {
+		let val: any = Object.values(filter)[0]; // set as object so u can get keys and vals
+		let skey: string = Object.keys(val)[0];
+		let sfield: string = skey.split("_", 2)[1];
+		let s: any = Object.values(val)[0];
+		let inputString: string = s;
+		let sNode: StringNode = new StringNode(sfield, inputString);
+		sNode.setNegated();
+		console.log(sNode.nodeMessage());
+		return sNode;
+	}
+	private handleMathComparisonNegation(filter: any): Node {
 		let key = Object.keys(filter)[0];
 		let val: any = Object.values(filter)[0]; // set as object so u can get keys and vals
-		let okey: string = Object.keys(val)[0];
-		let ofield: string = okey.split("_", 2)[1];
+		let mkey: string = Object.keys(val)[0];
+		let mfield: string = mkey.split("_", 2)[1];
+		let n: any = Object.values(val)[0];
+		let num: number = n;
+		if (key === "LT") {
+			let mNode: Node = new MathNode("GT", mfield, num);
+			console.log(mNode.nodeMessage());
+			return mNode;
+		} else if (key === "GT") {
+			let mNode: Node = new MathNode("LT", mfield, num);
+			console.log(mNode.nodeMessage());
+			return mNode;
+		} else {
+			let mNode: Node = new MathNode("NEQ", mfield, num);
+			console.log(mNode.nodeMessage());
+			return mNode;
+		}
+	}
+	private handleNegation(filter: any): Node {
+		let key = Object.keys(filter)[0];
 		if (this.isLogicComparison(key)) {
 			return this.handleLogicComparisonNegation(filter);
 		} else if (this.isMathComparison(key)) {
-			let n: any = Object.values(val)[0];
-			let num: number = n;
-			if (key === "LT") {
-				let mNode: Node = new MathNode("GT", ofield, num);
-				console.log(mNode.nodeMessage());
-				return mNode;
-			} else if (key === "GT") {
-				let mNode: Node = new MathNode("LT", ofield, num);
-				console.log(mNode.nodeMessage());
-				return mNode;
-			} else {
-				let mNode: Node = new MathNode("NEQ", ofield, num);
-				console.log(mNode.nodeMessage());
-				return mNode;
-			}
+			return this.handleMathComparisonNegation(filter);
 		} else if (this.isStringComparison(key)) {
-			console.log(ofield);
-			let s: any = Object.values(val)[0];
-			let inputString: string = s;
-			console.log(inputString);
-			let sNode: StringNode = new StringNode(ofield, inputString);
-			sNode.setNegated();
-			console.log(sNode.nodeMessage());
-			return sNode;
+			return this.handleStringComparisonNegation(filter);
 		} else if (this.isNegation(key)) {
 			let notNot = Object.values(filter)[0];
 			console.log(notNot);
 			return this.buildWhereTree(notNot);
 		} else {
-			console.log("Invalid node");
-			return new InvalidNode();
+			throw new InsightError("Invalid key for filter");
 		}
 	}
 	public buildWhereTree(query: any): Node {
@@ -80,6 +98,9 @@ export class InsightQuery {
 		if (this.isLogicComparison(key)) {
 			let lNode: Node = new LogicNode(key);
 			let filterList: any = Object.values(query)[0];
+			if (filterList.length === 0) {
+				throw new InsightError();
+			}
 			console.log(lNode.nodeMessage());
 			for (let filter in filterList) {
 				lNode.addChild(this.buildWhereTree(filterList[filter]));
@@ -108,7 +129,7 @@ export class InsightQuery {
 			console.log("Theres a negation...the following node will be automatically negated");
 			return this.handleNegation(negFilter);
 		} else {
-			return new InvalidNode();
+			throw new InsightError("Invalid key for filter");
 		}
 	}
 }
