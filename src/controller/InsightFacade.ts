@@ -10,7 +10,8 @@ import {
 	NotFoundError,
 } from "./IInsightFacade";
 import {DataFrame, Section} from "./InsightDataFrame";
-import {LogicNode, MathNode, Node, StringNode, SMH} from "./InsightNode";
+import {LogicNode, MathNode, Node, StringNode} from "./InsightNode";
+import {InsightQuery} from "./InsightQuery";
 
 /**
  * This is the main programmatic entry point for the project.
@@ -19,13 +20,13 @@ import {LogicNode, MathNode, Node, StringNode, SMH} from "./InsightNode";
  */
 export default class InsightFacade implements IInsightFacade {
 	private readonly dataFrames: DataFrame[];
-	private readonly bro: SMH;
+	private readonly query: InsightQuery;
 	constructor() {
 		// TODO: we cannot make ANY assumptions about the contents of the data directory
 		// 		 --> make sure that we only create new dataframes from good objects (that have all keys)
 		//		 --> must be changed if we store anything other than datasets in the data directory
 		this.dataFrames = [];
-		this.bro = new SMH();
+		this.query = new InsightQuery();
 		fs.ensureDirSync("./data/");
 		let fileNames = fs.readdirSync("./data/");
 		for (let fileName of fileNames) {
@@ -169,35 +170,14 @@ export default class InsightFacade implements IInsightFacade {
 			reject(new NotFoundError("A DataSet with given ID was not found"));
 		});
 	}
-	private doSomething(query: object): boolean {
-		console.log(Object.entries(query));
-		console.log(Object.keys(query));
-		console.log(Object.values(query));
-		console.log("__________");
-		let k = Object.keys(query);
-		let v = Object.values(query);
-		let whereIndex = k.indexOf("WHERE");
-		let whereVal = v[whereIndex];
-		console.log(whereIndex);
-		console.log(whereVal);
-		console.log("__________");
-		let and = Object.keys(whereVal)[0];
-		let andArgs = Object.values(whereVal);
-		console.log("Only one key: " + and);
-		console.log("Values corresponding to AND: ");
-		console.log(andArgs);
-		console.log(andArgs[0]); // array
-		let wdwd: any = andArgs[0];
-		for (let x in wdwd) {
-			console.log(wdwd[x]);
-			console.log(Object.keys(wdwd[x]));
-			console.log(Object.values(wdwd[x]));
-			let y: any = Object.values(wdwd[x])[0];
-			console.log(y);
-			console.log(Object.keys(y));
-			console.log(Object.values(y));
+	private printTree(tree: Node) {
+		if (tree.getChildren().length === 0) {
+			console.log(tree.nodeMessage());
+		} else {
+			for (let n in tree.getChildren()) {
+				this.printTree(tree.getChildren()[n]);
+			}
 		}
-		return false;
 	}
 	public performQuery(query: unknown): Promise<InsightResult[]> {
 		if (query === null) {
@@ -213,7 +193,9 @@ export default class InsightFacade implements IInsightFacade {
 				let topLevelVals = Object.values(query);
 				let whereIndex = topLevelKeys.indexOf("WHERE");
 				let whereVal: any = topLevelVals[whereIndex];
-				this.bro.buildWhereTree(whereVal);
+				console.log(whereVal);
+				let queryTree: Node = this.query.buildWhereTree(whereVal);
+				// this.printTree(queryTree);
 			}
 		}
 		return Promise.resolve([]);
