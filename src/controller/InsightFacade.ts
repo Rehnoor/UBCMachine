@@ -181,18 +181,8 @@ export default class InsightFacade implements IInsightFacade {
 		}
 	}
 	private dataIDisValid(tree: Node): boolean {
-		// non-logic node and dataid field is not "" means that node is one of:
-		// MathNode or StringNode
 		if (tree.getChildren().length === 0) {
-			if (tree.getdataID() !== "") {
-				if (tree.getdataID() === this.dataFrames[0].getID()) {
-					return true;
-				} else {
-					return false;
-				}
-			} else {
-				return true;
-			}
+			return tree.getdataID() === this.dataFrames[0].getID();
 		} else {
 			let check: boolean = true;
 			for (let x in tree.getChildren()) {
@@ -202,10 +192,10 @@ export default class InsightFacade implements IInsightFacade {
 		}
 	}
 	public performQuery(query: unknown): Promise<InsightResult[]> {
-		// TODO: Reject since query is null
 		if (query === null) {
+			console.log("SHOULD BE REJECTED");
 			return Promise.resolve([]);
-			// if query is object then its good
+			// if query is object then it is good
 		} else if (typeof query === "object") {
 			// WHERE and OPTIONS block are both required
 			if (Object.keys(query).includes("WHERE") && Object.keys(query).includes("OPTIONS")) {
@@ -222,9 +212,14 @@ export default class InsightFacade implements IInsightFacade {
 				console.log(whereVal); // prints the JSON of WHERE portion
 				let queryTree: Node = this.query.buildWhereTree(whereVal); // actual building of tree
 				if (!this.dataIDisValid(queryTree)) {
-					// TODO
+					// TODO: reject if dataID's in tree are not valid
+					// this means that at least one of the filters did not contain a valid dataID
+					console.log("SHOULD BE REJECTED");
 				}
 				// this.printTree(queryTree);
+			} else {
+				// reject since one of WHERE or OPTIONS is missing
+				console.log("SHOULD BE REJECTED");
 			}
 		}
 		return Promise.resolve([]);
