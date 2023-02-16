@@ -49,9 +49,10 @@ export class InsightQuery {
 		let val: any = Object.values(filter)[0]; // set as object so u can get keys and vals
 		let skey: string = Object.keys(val)[0];
 		let sfield: string = skey.split("_", 2)[1];
+		let dataid: string = skey.split("_", 2)[1];
 		let s: any = Object.values(val)[0];
 		let inputString: string = s;
-		let sNode: StringNode = new StringNode(sfield, inputString);
+		let sNode: StringNode = new StringNode(sfield, inputString, dataid);
 		sNode.setNegated();
 		console.log(sNode.nodeMessage());
 		return sNode;
@@ -61,18 +62,19 @@ export class InsightQuery {
 		let val: any = Object.values(filter)[0]; // set as object so u can get keys and vals
 		let mkey: string = Object.keys(val)[0];
 		let mfield: string = mkey.split("_", 2)[1];
+		let dataid: string = mkey.split("_", 2)[0];
 		let n: any = Object.values(val)[0];
 		let num: number = n;
 		if (key === "LT") {
-			let mNode: Node = new MathNode("GT", mfield, num);
+			let mNode: Node = new MathNode("GT", mfield, num, dataid);
 			console.log(mNode.nodeMessage());
 			return mNode;
 		} else if (key === "GT") {
-			let mNode: Node = new MathNode("LT", mfield, num);
+			let mNode: Node = new MathNode("LT", mfield, num, dataid);
 			console.log(mNode.nodeMessage());
 			return mNode;
 		} else {
-			let mNode: Node = new MathNode("NEQ", mfield, num);
+			let mNode: Node = new MathNode("NEQ", mfield, num, dataid);
 			console.log(mNode.nodeMessage());
 			return mNode;
 		}
@@ -110,20 +112,30 @@ export class InsightQuery {
 			let val: any = Object.values(query)[0]; // set as object so u can get keys and vals
 			let mkey: string = Object.keys(val)[0];
 			let mfield: string = mkey.split("_", 2)[1];
+			let dataid: string = mkey.split("_", 2)[0];
 			let n: any = Object.values(val)[0];
 			let num: number = n;
-			let mNode: Node = new MathNode(key, mfield, num);
+			let mNode: Node = new MathNode(key, mfield, num, dataid);
 			console.log(mNode.nodeMessage());
-			return mNode;
+			if (this.validateMField(mfield)) {
+				return mNode;
+			} else {
+				throw new InsightError("Invalid mfield");
+			}
 		} else if (this.isStringComparison(key)) {
 			let val: any = Object.values(query)[0];
 			let skey: string = Object.keys(val)[0];
 			let sfield: string = skey.split("_", 2)[1];
+			let dataid: string = skey.split("_", 2)[0];
 			let s: any = Object.values(val)[0];
 			let inputString: string = s;
-			let sNode: Node = new StringNode(sfield, inputString);
+			let sNode: Node = new StringNode(sfield, inputString, dataid);
 			console.log(sNode.nodeMessage());
-			return sNode;
+			if (this.validateSField(sfield)) {
+				return sNode;
+			} else {
+				throw new InsightError("Invalid sfield");
+			}
 		} else if (this.isNegation(key)) {
 			let negFilter = Object.values(query)[0];
 			console.log("Theres a negation...the following node will be automatically negated");

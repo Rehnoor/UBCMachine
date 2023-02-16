@@ -32,34 +32,40 @@ export class LogicNode extends Node {
 export class MathNode extends Node {
 	private type: string;
 	private mfield: string;
+	private dataid: string;
 	private num: number;
-	constructor(type: string, mfield: string, num: number) {
+	constructor(type: string, mfield: string, num: number, dataid: string) {
 		super();
 		this.num = num;
 		this.mfield = mfield;
 		this.type = type;
+		this.dataid = dataid;
 	}
 	public nodeMessage(): string {
-		return "______\nMATH NODE WITH TYPE: " + this.type + "\nmfield: " + this.mfield + "\nnumber: " + this.num;
+		let s: string = "\ndataid: " + this.dataid;
+		return "______\nMATH NODE WITH TYPE: " + this.type + "\nmfield: " + this.mfield + "\nnumber: " + this.num + s;
 	}
 }
 
 export class StringNode extends Node {
 	private sfield: string;
+	private dataid: string;
 	private inputString: string;
 	private negated: boolean;
-	constructor(sfield: string, inputString: string) {
+	constructor(sfield: string, inputString: string, dataid: string) {
 		super();
 		this.inputString = inputString;
 		this.sfield = sfield;
 		this.negated = false;
+		this.dataid = dataid;
 	}
 	public setNegated() {
 		this.negated = !this.negated;
 	}
 
 	public nodeMessage(): string {
-		return "______\nSTRING NODE WITH inputString: " + this.inputString + "\nsfield: " + this.sfield + this.negated;
+		let s: string = "\ndataid: " + this.dataid;
+		return "______\nSTRING NODE WITH inputString: " + this.inputString + "\nsfield: " + this.sfield + s;
 	}
 }
 export class InvalidNode extends Node {

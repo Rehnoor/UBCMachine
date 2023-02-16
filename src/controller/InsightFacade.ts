@@ -199,7 +199,7 @@ export default class InsightFacade implements IInsightFacade {
 				let whereIndex = topLevelKeys.indexOf("WHERE");
 				let whereVal: any = topLevelVals[whereIndex];
 				console.log(whereVal); // prints the JSON of WHERE portion
-				let queryTree: Node = this.query.buildWhereTree(whereVal);
+				let queryTree: Node = this.query.buildWhereTree(whereVal); // actual building of tree
 				// this.printTree(queryTree);
 			}
 		}
