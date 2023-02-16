@@ -180,6 +180,27 @@ export default class InsightFacade implements IInsightFacade {
 			}
 		}
 	}
+	private dataIDisValid(tree: Node): boolean {
+		// non-logic node and dataid field is not "" means that node is one of:
+		// MathNode or StringNode
+		if (tree.getChildren().length === 0) {
+			if (tree.getdataID() !== "") {
+				if (tree.getdataID() === this.dataFrames[0].getID()) {
+					return true;
+				} else {
+					return false;
+				}
+			} else {
+				return true;
+			}
+		} else {
+			let check: boolean = true;
+			for (let x in tree.getChildren()) {
+				check = check && this.dataIDisValid(tree.getChildren()[x]);
+			}
+			return check;
+		}
+	}
 	public performQuery(query: unknown): Promise<InsightResult[]> {
 		// TODO: Reject since query is null
 		if (query === null) {
@@ -200,6 +221,9 @@ export default class InsightFacade implements IInsightFacade {
 				let whereVal: any = topLevelVals[whereIndex];
 				console.log(whereVal); // prints the JSON of WHERE portion
 				let queryTree: Node = this.query.buildWhereTree(whereVal); // actual building of tree
+				if (!this.dataIDisValid(queryTree)) {
+					// TODO
+				}
 				// this.printTree(queryTree);
 			}
 		}

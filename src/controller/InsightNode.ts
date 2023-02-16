@@ -1,9 +1,13 @@
 export abstract class Node {
 	private children: Node[];
+	private dataid: string;
 	constructor() {
 		this.children = [];
+		this.dataid = "";
 	}
-
+	public setDataID(dataid: string) {
+		this.dataid = dataid;
+	}
 	public abstract nodeMessage(): string;
 
 	public addChild(child: Node) {
@@ -11,6 +15,9 @@ export abstract class Node {
 	}
 	public getChildren(): Node[] {
 		return this.children;
+	}
+	public getdataID(): string {
+		return this.dataid;
 	}
 }
 
@@ -32,24 +39,22 @@ export class LogicNode extends Node {
 export class MathNode extends Node {
 	private type: string;
 	private mfield: string;
-	private dataid: string;
 	private num: number;
 	constructor(type: string, mfield: string, num: number, dataid: string) {
 		super();
 		this.num = num;
 		this.mfield = mfield;
 		this.type = type;
-		this.dataid = dataid;
+		this.setDataID(dataid);
 	}
 	public nodeMessage(): string {
-		let s: string = "\ndataid: " + this.dataid;
+		let s: string = "\ndataid: " + this.getdataID();
 		return "______\nMATH NODE WITH TYPE: " + this.type + "\nmfield: " + this.mfield + "\nnumber: " + this.num + s;
 	}
 }
 
 export class StringNode extends Node {
 	private sfield: string;
-	private dataid: string;
 	private inputString: string;
 	private negated: boolean;
 	constructor(sfield: string, inputString: string, dataid: string) {
@@ -57,14 +62,14 @@ export class StringNode extends Node {
 		this.inputString = inputString;
 		this.sfield = sfield;
 		this.negated = false;
-		this.dataid = dataid;
+		this.setDataID(dataid);
 	}
 	public setNegated() {
 		this.negated = !this.negated;
 	}
 
 	public nodeMessage(): string {
-		let s: string = "\ndataid: " + this.dataid;
+		let s: string = "\ndataid: " + this.getdataID();
 		return "______\nSTRING NODE WITH inputString: " + this.inputString + "\nsfield: " + this.sfield + s;
 	}
 }
