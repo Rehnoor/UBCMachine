@@ -80,6 +80,9 @@ export class InsightQuery {
 			throw new InsightError("Too few or too many arguments for String Filter");
 		}
 		let skey: string = Object.keys(val)[0];
+		if (!skey.includes("_")) {
+			throw new InsightError("Invalid skay, a valid skey requires an underscore");
+		}
 		let sfield: string = skey.split("_", 2)[1];
 		let dataid: string = skey.split("_", 2)[0];
 		if (dataid === "") {

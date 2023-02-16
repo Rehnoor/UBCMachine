@@ -180,24 +180,49 @@ export default class InsightFacade implements IInsightFacade {
 			}
 		}
 	}
-	private dataIDisValid(tree: Node): boolean {
+	private getTreeID(tree: Node): string {
 		if (tree.getChildren().length === 0) {
-			return tree.getdataID() === this.dataFrames[0].getID();
+			return tree.getdataID();
+		} else {
+			return this.getTreeID(tree.getChildren()[0]);
+		}
+	}
+	private frameIDMatch(treeID: string): boolean {
+		for (let x in this.dataFrames) {
+			if (this.dataFrames[x].getID() === treeID) {
+				return true;
+			}
+		}
+		return false;
+	}
+	private dataIDConsistencyCheck(tree: Node, treeID: string): boolean {
+		if (tree.getChildren().length === 0) {
+			return tree.getdataID() === treeID;
 		} else {
 			let check: boolean = true;
 			for (let x in tree.getChildren()) {
-				check = check && this.dataIDisValid(tree.getChildren()[x]);
+				check = check && this.dataIDConsistencyCheck(tree.getChildren()[x], treeID);
 			}
 			return check;
 		}
 	}
+	private dataIDisValid(tree: Node): boolean {
+		let treeID: string = this.getTreeID(tree);
+		if (!this.frameIDMatch(treeID)) {
+			throw new InsightError("The dataid referenced in the query does not match any dataset currently added");
+		} else {
+			if (this.dataIDConsistencyCheck(tree, treeID)) {
+				return true;
+			} else {
+				throw new InsightError("The dataID in this query is not the same for all leaf nodes");
+			}
+		}
+	}
 	public performQuery(query: unknown): Promise<InsightResult[]> {
 		if (query === null) {
-			console.log("SHOULD BE REJECTED");
+			// TODO: reject
 			return Promise.resolve([]);
-			// if query is object then it is good
 		} else if (typeof query === "object") {
-			// WHERE and OPTIONS block are both required
 			if (Object.keys(query).includes("WHERE") && Object.keys(query).includes("OPTIONS")) {
 				// finds indexOf where since it is not required for it to be first block in query
 				let x = Object.keys(query).indexOf("WHERE");
@@ -216,10 +241,8 @@ export default class InsightFacade implements IInsightFacade {
 					// this means that at least one of the filters did not contain a valid dataID
 					console.log("SHOULD BE REJECTED");
 				}
-				// this.printTree(queryTree);
 			} else {
-				// reject since one of WHERE or OPTIONS is missing
-				console.log("SHOULD BE REJECTED");
+				// TODO: reject since one of WHERE or OPTIONS is missing
 			}
 		}
 		return Promise.resolve([]);
