@@ -132,6 +132,9 @@ export class InsightQuery {
 	private dataIDConsistencyCheck(columnList: any): boolean {
 		let x: string = columnList[0].split("_", 2)[0];
 		for (let y in columnList) {
+			if (!columnList[y].includes("_")) {
+				return false;
+			}
 			if (!(columnList[y].split("_", 2)[0] === x)) {
 				return false;
 			}
@@ -151,6 +154,9 @@ export class InsightQuery {
 			return false;
 		}
 		for (let c in columnList) {
+			if (!columnList[c].includes("_")) {
+				return false;
+			}
 			let key: string = columnList[c].split("_", 2)[1];
 			if (!this.validateSField(key) && !this.validateMField(key)) {
 				return false;
@@ -160,12 +166,9 @@ export class InsightQuery {
 	}
 	public isValidColumnsWOrder(columnList: any, dataFrames: DataFrame[], orderVal: any): boolean {
 		let colVerification: boolean = this.isValidColumns(columnList, dataFrames);
-		if (Object.values(orderVal).length !== 1) {
-			return false;
-		}
 		let foundMatchingColumn: boolean = false;
 		for (let c in columnList) {
-			if (orderVal[0] === columnList[c]) {
+			if (orderVal === columnList[c]) {
 				foundMatchingColumn = true;
 			}
 		}

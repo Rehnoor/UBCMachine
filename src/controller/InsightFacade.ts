@@ -209,7 +209,7 @@ export default class InsightFacade implements IInsightFacade {
 	}
 	public performQuery(query: unknown): Promise<InsightResult[]> {
 		if (query === null) {
-			return Promise.reject("Query can not be null");
+			return Promise.reject(new InsightError("Query can not be null"));
 		} else if (typeof query === "object") {
 			let invalidBlocks: boolean = Object.keys(query).length !== 2;
 			if (Object.keys(query).includes("WHERE") && Object.keys(query).includes("OPTIONS") && !invalidBlocks) {
@@ -218,30 +218,30 @@ export default class InsightFacade implements IInsightFacade {
 				let optionsBlockIndex = Object.keys(query).indexOf("OPTIONS");
 				let topLevelVals = Object.values(query);
 				let optionsVal: any = topLevelVals[optionsBlockIndex];
-				let hasOrder: boolean = false;
 				// NO COLUMNS BLOCK
 				if (!Object.keys(optionsVal).includes("COLUMNS")) {
-					return Promise.reject("Valid query must include COLUMNS portion");
+					return Promise.reject(new InsightError("Valid query must include COLUMNS portion"));
 				}
 				let columnsIndex: number = Object.keys(optionsVal).indexOf("COLUMNS");
 				let columnsVal: any = Object.values(optionsVal)[columnsIndex];
 				// COLUMNS IS EMPTY
 				if (Object.values(columnsVal).length === 0) {
-					return Promise.reject("COLUMNS section must have at least one key");
+					return Promise.reject(new InsightError("COLUMNS section must have at least one key"));
 				}
 				let columnList: string[] = Object.values(columnsVal);
 				// IF ORDER OPTION IS SELECTED
 				if (Object.keys(optionsVal).includes("ORDER")) {
-					hasOrder = true;
+					console.log("successfully identified as ordered");
 					let orderIndex: number = Object.keys(optionsVal).indexOf("ORDER");
 					let orderVal: any = Object.values(optionsVal)[orderIndex];
 					if(!this.query.isValidColumnsWOrder(columnList, this.dataFrames, orderVal)) {
-						return Promise.reject("Column or order arguments are invalid");
+						return Promise.reject(new InsightError("Column or order arguments are invalid"));
 					}
+					console.log("good job");
 				}
 				// IF COLUMNS ARE INVALID (tested dataid stuff and valid mkey/skey)
 				if(!this.query.isValidColumns(columnList, this.dataFrames)) {
-					return Promise.reject("Column arguments are invalid");
+					return Promise.reject(new InsightError("Column arguments are invalid"));
 				}
 				// IF WHERE BLOCK IS EMPTY
 				if (Object.values(query)[whereBlockIndex].length === 0) {
@@ -251,13 +251,13 @@ export default class InsightFacade implements IInsightFacade {
 				try {
 					let queryTree: Node = this.query.buildWhereTree(whereVal);
 					if (!this.dataIDisValid(queryTree)) {
-						return Promise.reject("Entered dataid is not valid");
+						return Promise.reject(new InsightError("Entered dataid is not valid"));
 					}
 				}  catch (e) {
 					return Promise.reject(e);
 				}
 			} else {
-				return Promise.reject("Query must have only WHERE and OPTIONS block");
+				return Promise.reject(new InsightError("Query must have only WHERE and OPTIONS block"));
 			}
 		}
 		return Promise.resolve([]);
