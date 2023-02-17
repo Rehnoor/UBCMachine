@@ -174,4 +174,11 @@ export class InsightQuery {
 		}
 		return foundMatchingColumn && colVerification;
 	}
+	public getDataID(n: Node): string {
+		if (n.getChildren().length === 0) {
+			return n.getdataID();
+		} else {
+			return this.getDataID(n.getChildren()[0]);
+		}
+	}
 }

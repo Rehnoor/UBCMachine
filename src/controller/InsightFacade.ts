@@ -213,7 +213,6 @@ export default class InsightFacade implements IInsightFacade {
 		} else if (typeof query === "object") {
 			let invalidBlocks: boolean = Object.keys(query).length !== 2;
 			if (Object.keys(query).includes("WHERE") && Object.keys(query).includes("OPTIONS") && !invalidBlocks) {
-				// finds indexOf where since it is not required for it to be first block in query
 				let whereBlockIndex = Object.keys(query).indexOf("WHERE");
 				let optionsBlockIndex = Object.keys(query).indexOf("OPTIONS");
 				let topLevelVals = Object.values(query);
@@ -229,30 +228,28 @@ export default class InsightFacade implements IInsightFacade {
 					return Promise.reject(new InsightError("COLUMNS section must have at least one key"));
 				}
 				let columnList: string[] = Object.values(columnsVal);
-				// IF ORDER OPTION IS SELECTED
+				// ***********OPTIONS STUFF***********
+				let orderIndex: number = Object.keys(optionsVal).indexOf("ORDER");
+				let orderVal: any = Object.values(optionsVal)[orderIndex];
+				let hasOrder: boolean = false;
 				if (Object.keys(optionsVal).includes("ORDER")) {
-					console.log("successfully identified as ordered");
-					let orderIndex: number = Object.keys(optionsVal).indexOf("ORDER");
-					let orderVal: any = Object.values(optionsVal)[orderIndex];
+					hasOrder = true;
 					if(!this.query.isValidColumnsWOrder(columnList, this.dataFrames, orderVal)) {
 						return Promise.reject(new InsightError("Column or order arguments are invalid"));
 					}
-					console.log("good job");
+				} else { // no order
+					if (!this.query.isValidColumns(columnList, this.dataFrames)) {
+						return Promise.reject(new InsightError("Column arguments are invalid"));
+					}
 				}
-				// IF COLUMNS ARE INVALID (tested dataid stuff and valid mkey/skey)
-				if(!this.query.isValidColumns(columnList, this.dataFrames)) {
-					return Promise.reject(new InsightError("Column arguments are invalid"));
-				}
-				// IF WHERE BLOCK IS EMPTY
+				// ***********************************
+				// ************WHERE STUFF***********
 				if (Object.values(query)[whereBlockIndex].length === 0) {
 					return Promise.resolve([]); // perform query, but if number of results is > 5000, reject
 				}
 				let whereVal: any = topLevelVals[whereBlockIndex];
 				try {
-					let queryTree: Node = this.query.buildWhereTree(whereVal);
-					if (!this.dataIDisValid(queryTree)) {
-						return Promise.reject(new InsightError("Entered dataid is not valid"));
-					}
+					this.runQuery(whereVal);
 				}  catch (e) {
 					return Promise.reject(e);
 				}
@@ -261,6 +258,13 @@ export default class InsightFacade implements IInsightFacade {
 			}
 		}
 		return Promise.resolve([]);
+	}
+	public runQuery(whereBlockValue: any) {
+		let queryTree: Node = this.query.buildWhereTree(whereBlockValue);
+		if (!this.dataIDisValid(queryTree)) {
+			return Promise.reject(new InsightError("Entered dataid is not valid"));
+		}
+		let dataIDForQuery: string = this.query.getDataID(queryTree);
 	}
 	public listDatasets(): Promise<InsightDataset[]> {
 		let result: InsightDataset[] = [];
