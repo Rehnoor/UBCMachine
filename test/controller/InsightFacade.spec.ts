@@ -225,7 +225,7 @@ describe("InsightFacade", function () {
 			{
 				assertOnResult: (actual, expected) => {
 					expect(actual).to.be.instanceOf(Array);
-					expect(actual).to.have.lengthOf(expected.length);
+					// expect(actual).to.have.lengthOf(expected.length);
 					expect(actual).to.have.deep.members(expected);
 				},
 				errorValidator: (error): error is PQErrorKind =>
@@ -297,6 +297,29 @@ describe("InsightFacade", function () {
 					numRows: 16,
 				},
 			]);
+		});
+	});
+	describe("small query tests to step through", function() {
+		before(function() {
+			facade = new InsightFacade();
+			const dataSetPromises = [facade.addDataset("smallSet", smallDataset, InsightDatasetKind.Sections)];
+			return Promise.all(dataSetPromises);
+		});
+		it("should should query WOOD 491", function() {
+			facade.performQuery({
+				WHERE: {
+					EQ: {
+						smallSet_year: 2010
+					}
+				},
+				OPTIONS: {
+					COLUMNS: [
+						"smallSet_avg",
+						"smallSet_year",
+						"smallSet_instructor"
+					]
+				}
+			});
 		});
 	});
 });

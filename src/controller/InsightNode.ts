@@ -127,12 +127,12 @@ export class StringNode extends Node {
 		let sectionVal: string = this.getSfield(section);
 		if (this.inputString.includes("*")) {
 			if (this.inputString[0] === "*" && this.inputString[this.inputString.length - 1] === "*") { // contains
-				return sectionVal.includes(this.inputString);
+				return sectionVal.includes(this.inputString.replaceAll("*", ""));
 			} else if (this.inputString[0] !== "*" && this.inputString[this.inputString.length - 1] === "*") { // starts
 				//                                                                                                with
-				return sectionVal.startsWith(this.inputString);
+				return sectionVal.startsWith(this.inputString.replace("*", ""));
 			} else { // ends with
-				return sectionVal.endsWith(this.inputString);
+				return sectionVal.endsWith(this.inputString.replace("*", ""));
 			}
 		} else { // if the inputString does not contain any * AKA exact match
 			return (this.inputString === sectionVal);
