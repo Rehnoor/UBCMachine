@@ -19,7 +19,7 @@ export class DataFrame {
 	private readonly id: string;
 	private numRows: number = 0;
 	private readonly kind: InsightDatasetKind;
-	private sections: Section[] = [];
+	private readonly sections: Section[] = [];
 	constructor(id: string, kind: InsightDatasetKind) {
 		this.id = id;
 		this.kind = kind;
@@ -36,5 +36,8 @@ export class DataFrame {
 	}
 	public getKind(): InsightDatasetKind {
 		return this.kind;
+	}
+	public getSections(): Section[] {
+		return this.sections;
 	}
 }

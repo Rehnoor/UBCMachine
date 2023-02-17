@@ -11,7 +11,7 @@ import {
 } from "./IInsightFacade";
 import {DataFrame, Section} from "./InsightDataFrame";
 import {LogicNode, MathNode, Node, StringNode} from "./InsightNode";
-import {InsightQuery} from "./InsightQuery";
+import {QueryEngine} from "./QueryEngine";
 
 /**
  * This is the main programmatic entry point for the project.
@@ -20,13 +20,13 @@ import {InsightQuery} from "./InsightQuery";
  */
 export default class InsightFacade implements IInsightFacade {
 	private readonly dataFrames: DataFrame[];
-	private readonly query: InsightQuery;
+	private readonly queryEngine: QueryEngine;
 	constructor() {
 		// TODO: we cannot make ANY assumptions about the contents of the data directory
 		// 		 --> make sure that we only create new dataframes from good objects (that have all keys)
 		//		 --> must be changed if we store anything other than datasets in the data directory
 		this.dataFrames = [];
-		this.query = new InsightQuery();
+		this.queryEngine = new QueryEngine();
 		fs.ensureDirSync("./data/");
 		let fileNames = fs.readdirSync("./data/");
 		for (let fileName of fileNames) {
@@ -231,25 +231,28 @@ export default class InsightFacade implements IInsightFacade {
 				// ***********OPTIONS STUFF***********
 				let orderIndex: number = Object.keys(optionsVal).indexOf("ORDER");
 				let orderVal: any = Object.values(optionsVal)[orderIndex];
-				let hasOrder: boolean = false;
-				if (Object.keys(optionsVal).includes("ORDER")) {
-					hasOrder = true;
-					if(!this.query.isValidColumnsWOrder(columnList, this.dataFrames, orderVal)) {
-						return Promise.reject(new InsightError("Column or order arguments are invalid"));
-					}
-				} else { // no order
-					if (!this.query.isValidColumns(columnList, this.dataFrames)) {
-						return Promise.reject(new InsightError("Column arguments are invalid"));
-					}
-				}
+				this.validateColumnsAndOrder(optionsVal, columnList, orderVal);
 				// ***********************************
 				// ************WHERE STUFF***********
+				// TODO: do this check in runQuery
 				if (Object.values(query)[whereBlockIndex].length === 0) {
 					return Promise.resolve([]); // perform query, but if number of results is > 5000, reject
 				}
 				let whereVal: any = topLevelVals[whereBlockIndex];
 				try {
-					this.runQuery(whereVal);
+					let queryTree: Node = this.queryEngine.buildWhereTree(whereVal);
+					if (!this.dataIDisValid(queryTree)) {
+						return Promise.reject(new InsightError("Entered dataid is not valid"));
+					}
+					let dataIDForQuery: string = this.queryEngine.getDataID(queryTree);
+					for (let dataFrame of this.dataFrames) {
+						if (dataFrame.getID() === dataIDForQuery) {
+							// perform query on dataframe
+							// return the result
+							let result = this.queryEngine.runQuery(dataFrame, queryTree, columnList, orderVal);
+							return Promise.resolve(result);
+						}
+					}
 				}  catch (e) {
 					return Promise.reject(e);
 				}
@@ -257,14 +260,20 @@ export default class InsightFacade implements IInsightFacade {
 				return Promise.reject(new InsightError("Query must have only WHERE and OPTIONS block"));
 			}
 		}
-		return Promise.resolve([]);
+		return Promise.reject(new InsightError("query must be of type object"));
 	}
-	public runQuery(whereBlockValue: any) {
-		let queryTree: Node = this.query.buildWhereTree(whereBlockValue);
-		if (!this.dataIDisValid(queryTree)) {
-			return Promise.reject(new InsightError("Entered dataid is not valid"));
+	// THROWS: InsightError
+	private validateColumnsAndOrder(optionsVal: object, columnList: string[], orderVal: any) {
+		if (Object.keys(optionsVal).includes("ORDER")) {
+			// it is ordered
+			if(!this.queryEngine.isValidColumnsWOrder(columnList, this.dataFrames, orderVal)) {
+				throw new InsightError("Column or order arguments are invalid");
+			}
+		} else { // no order
+			if (!this.queryEngine.isValidColumns(columnList, this.dataFrames)) {
+				throw new InsightError("Column arguments are invalid");
+			}
 		}
-		let dataIDForQuery: string = this.query.getDataID(queryTree);
 	}
 	public listDatasets(): Promise<InsightDataset[]> {
 		let result: InsightDataset[] = [];
