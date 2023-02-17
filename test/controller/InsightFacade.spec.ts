@@ -225,7 +225,7 @@ describe("InsightFacade", function () {
 			{
 				assertOnResult: (actual, expected) => {
 					expect(actual).to.be.instanceOf(Array);
-					// expect(actual).to.have.lengthOf(expected.length);
+					expect(actual).to.have.lengthOf(expected.length);
 					expect(actual).to.have.deep.members(expected);
 				},
 				errorValidator: (error): error is PQErrorKind =>
@@ -314,9 +314,16 @@ describe("InsightFacade", function () {
 				},
 				OPTIONS: {
 					COLUMNS: [
-						"smallSet_avg",
+						"smallSet_uuid",
+						"smallSet_id",
+						"smallSet_title",
+						"smallSet_instructor",
+						"smallSet_dept",
 						"smallSet_year",
-						"smallSet_instructor"
+						"smallSet_avg",
+						"smallSet_pass",
+						"smallSet_fail",
+						"smallSet_audit"
 					]
 				}
 			});

@@ -101,13 +101,19 @@ export default class InsightFacade implements IInsightFacade {
 					for (let section of course.result) {
 						const hasAllKeys = requiredSectionKeys.every((k) => k in section);
 						if (hasAllKeys) {
+							let yearVal = +section.Year;
+							if ("Section" in section) {
+								if (section.Section === "overall") {
+									yearVal = 1900;
+								}
+							}
 							const newSection = new Section(
 								String(section.id),
 								section.Course,
 								section.Title,
 								section.Professor,
 								section.Subject,
-								+section.Year,
+								yearVal,
 								section.Avg,
 								section.Pass,
 								section.Fail,
