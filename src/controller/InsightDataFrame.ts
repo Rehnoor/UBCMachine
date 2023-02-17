@@ -1,19 +1,25 @@
 import {InsightDatasetKind} from "./IInsightFacade";
 
-
 export class Section {
-	constructor(private readonly uuid: string, private readonly id: string, private readonly title: string,
-				private readonly instructor: string, private readonly dept: string, private readonly year: number,
-				private readonly avg: number, private readonly pass: number,
-				private readonly fail: number, private readonly audit: number) {}
-
+	constructor(
+		public readonly uuid: string,
+		public readonly id: string,
+		public readonly title: string,
+		public readonly instructor: string,
+		public readonly dept: string,
+		public readonly year: number,
+		public readonly avg: number,
+		public readonly pass: number,
+		public readonly fail: number,
+		public readonly audit: number
+	) {}
 }
 
 export class DataFrame {
 	private readonly id: string;
 	private numRows: number = 0;
 	private readonly kind: InsightDatasetKind;
-	private sections: Section[] = [];
+	private readonly sections: Section[] = [];
 	constructor(id: string, kind: InsightDatasetKind) {
 		this.id = id;
 		this.kind = kind;
@@ -30,5 +36,8 @@ export class DataFrame {
 	}
 	public getKind(): InsightDatasetKind {
 		return this.kind;
+	}
+	public getSections(): Section[] {
+		return this.sections;
 	}
 }
