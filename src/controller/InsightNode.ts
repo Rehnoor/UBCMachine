@@ -1,11 +1,11 @@
-import {Section} from "./InsightDataFrame";
+import {DataFrame, Section} from "./InsightDataFrame";
 
 export abstract class Node {
 	private children: Node[];
 	private dataid: string;
 	constructor() {
 		this.children = [];
-		this.dataid = "non-leaf node";
+		this.dataid = "";
 	}
 	public setDataID(dataid: string) {
 		this.dataid = dataid;

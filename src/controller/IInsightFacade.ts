@@ -19,6 +19,7 @@ export interface InsightResult {
 	[key: string]: string | number;
 }
 
+
 export class InsightError extends Error {
 	constructor(message?: string) {
 		super(message);

@@ -59,7 +59,6 @@ export default class InsightFacade implements IInsightFacade {
 		return new Promise<string[]>((resolve, reject) => {
 			this.convertFilesToString(content)
 				.then((jsonCourseArray) => {
-					// console.log("jsonData length =", jsonCourseArray.length);
 					this.parseStringDataToSections(jsonCourseArray, newDataFrame);
 					if (newDataFrame.getNumRows() === 0) {
 						reject(new InsightError("Zip file contained no valid sections: check formatting"));
@@ -170,16 +169,6 @@ export default class InsightFacade implements IInsightFacade {
 			reject(new NotFoundError("A DataSet with given ID was not found"));
 		});
 	}
-	// function to traverse tree (use if needed)
-	private printTree(tree: Node) {
-		if (tree.getChildren().length === 0) {
-			console.log(tree.nodeMessage());
-		} else {
-			for (let n in tree.getChildren()) {
-				this.printTree(tree.getChildren()[n]);
-			}
-		}
-	}
 	private getTreeID(tree: Node): string {
 		if (tree.getChildren().length === 0) {
 			return tree.getdataID();
@@ -220,29 +209,55 @@ export default class InsightFacade implements IInsightFacade {
 	}
 	public performQuery(query: unknown): Promise<InsightResult[]> {
 		if (query === null) {
-			// TODO: reject
-			return Promise.resolve([]);
+			return Promise.reject("Query can not be null");
 		} else if (typeof query === "object") {
-			if (Object.keys(query).includes("WHERE") && Object.keys(query).includes("OPTIONS")) {
+			let invalidBlocks: boolean = Object.keys(query).length !== 2;
+			if (Object.keys(query).includes("WHERE") && Object.keys(query).includes("OPTIONS") && !invalidBlocks) {
 				// finds indexOf where since it is not required for it to be first block in query
-				let x = Object.keys(query).indexOf("WHERE");
-				// if query block is empty, return entire dataset IFF it has less than 5000 results
-				if (Object.values(query)[x].length === 0) {
-					return Promise.resolve([]); // return all objects and format according to OPTIONS
-				}
-				let topLevelKeys = Object.keys(query);
+				let whereBlockIndex = Object.keys(query).indexOf("WHERE");
+				let optionsBlockIndex = Object.keys(query).indexOf("OPTIONS");
 				let topLevelVals = Object.values(query);
-				let whereIndex = topLevelKeys.indexOf("WHERE");
-				let whereVal: any = topLevelVals[whereIndex];
-				console.log(whereVal); // prints the JSON of WHERE portion
-				let queryTree: Node = this.query.buildWhereTree(whereVal); // actual building of tree
-				if (!this.dataIDisValid(queryTree)) {
-					// TODO: reject if dataID's in tree are not valid
-					// this means that at least one of the filters did not contain a valid dataID
-					console.log("SHOULD BE REJECTED");
+				let optionsVal: any = topLevelVals[optionsBlockIndex];
+				let hasOrder: boolean = false;
+				// NO COLUMNS BLOCK
+				if (!Object.keys(optionsVal).includes("COLUMNS")) {
+					return Promise.reject("Valid query must include COLUMNS portion");
+				}
+				let columnsIndex: number = Object.keys(optionsVal).indexOf("COLUMNS");
+				let columnsVal: any = Object.values(optionsVal)[columnsIndex];
+				// COLUMNS IS EMPTY
+				if (Object.values(columnsVal).length === 0) {
+					return Promise.reject("COLUMNS section must have at least one key");
+				}
+				let columnList: string[] = Object.values(columnsVal);
+				// IF ORDER OPTION IS SELECTED
+				if (Object.keys(optionsVal).includes("ORDER")) {
+					hasOrder = true;
+					let orderIndex: number = Object.keys(optionsVal).indexOf("ORDER");
+					let orderVal: any = Object.values(optionsVal)[orderIndex];
+					if(!this.query.isValidColumnsWOrder(columnList, this.dataFrames, orderVal)) {
+						return Promise.reject("Column or order arguments are invalid");
+					}
+				}
+				// IF COLUMNS ARE INVALID (tested dataid stuff and valid mkey/skey)
+				if(!this.query.isValidColumns(columnList, this.dataFrames)) {
+					return Promise.reject("Column arguments are invalid");
+				}
+				// IF WHERE BLOCK IS EMPTY
+				if (Object.values(query)[whereBlockIndex].length === 0) {
+					return Promise.resolve([]); // perform query, but if number of results is > 5000, reject
+				}
+				let whereVal: any = topLevelVals[whereBlockIndex];
+				try {
+					let queryTree: Node = this.query.buildWhereTree(whereVal);
+					if (!this.dataIDisValid(queryTree)) {
+						return Promise.reject("Entered dataid is not valid");
+					}
+				}  catch (e) {
+					return Promise.reject(e);
 				}
 			} else {
-				// TODO: reject since one of WHERE or OPTIONS is missing
+				return Promise.reject("Query must have only WHERE and OPTIONS block");
 			}
 		}
 		return Promise.resolve([]);

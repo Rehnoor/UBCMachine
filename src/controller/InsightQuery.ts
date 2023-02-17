@@ -1,5 +1,6 @@
 import {LogicNode, MathNode, NegationNode, Node, StringNode} from "./InsightNode";
 import {InsightError} from "./IInsightFacade";
+import {DataFrame} from "./InsightDataFrame";
 
 export class InsightQuery {
 	public isLogicComparison(key: any): boolean {
@@ -93,7 +94,7 @@ export class InsightQuery {
 		}
 		let s: any = Object.values(val)[0];
 		let inputString: string = s;
-		if (!this.validateWildcard(inputString)) { // TODO
+		if (!this.validateWildcard(inputString)) {
 			throw new InsightError("Invalid input string, (*) only be the first or last characters of input strings");
 		}
 		let sNode: Node = new StringNode(sfield, inputString, dataid);
@@ -121,11 +122,53 @@ export class InsightQuery {
 		} else if (this.isMathComparison(key)) {
 			return this.handleMathComparison(query, key);
 		} else if (this.isStringComparison(key)) {
-			return this,this.handleStringComparison(query, key);
+			return this.handleStringComparison(query, key);
 		} else if (this.isNegation(key)) {
 			return this.handleNegation(query, key);
 		} else {
 			throw new InsightError("Invalid key for filter");
 		}
+	}
+	private dataIDConsistencyCheck(columnList: any): boolean {
+		let x: string = columnList[0].split("_", 2)[0];
+		for (let y in columnList) {
+			if (!(columnList[y].split("_", 2)[0] === x)) {
+				return false;
+			}
+		}
+		return true;
+	}
+	public isValidColumns(columnList: any, dataFrames: DataFrame[]): boolean {
+		let col: string = columnList[0];
+		let colDataID: string = col.split("_", 2)[0];
+		let dataIDFound: boolean = false;
+		for (let x in dataFrames) {
+			if (dataFrames[x].getID() === colDataID) {
+				dataIDFound = true;
+			}
+		}
+		if (!dataIDFound || !this.dataIDConsistencyCheck(columnList)) {
+			return false;
+		}
+		for (let c in columnList) {
+			let key: string = columnList[c].split("_", 2)[1];
+			if (!this.validateSField(key) && !this.validateMField(key)) {
+				return false;
+			}
+		}
+		return true;
+	}
+	public isValidColumnsWOrder(columnList: any, dataFrames: DataFrame[], orderVal: any): boolean {
+		let colVerification: boolean = this.isValidColumns(columnList, dataFrames);
+		if (Object.values(orderVal).length !== 1) {
+			return false;
+		}
+		let foundMatchingColumn: boolean = false;
+		for (let c in columnList) {
+			if (orderVal[0] === columnList[c]) {
+				foundMatchingColumn = true;
+			}
+		}
+		return foundMatchingColumn && colVerification;
 	}
 }
