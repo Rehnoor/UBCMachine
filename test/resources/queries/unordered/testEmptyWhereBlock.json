@@ -1,0 +1,113 @@
+{
+	"title": "testEmptyWhereBlock",
+	"input": {
+		"WHERE": {},
+		"OPTIONS": {
+			"COLUMNS": [
+				"smallData_year",
+				"smallData_dept",
+				"smallData_id",
+				"smallData_avg"
+			]
+		}
+	},
+	"errorExpected": false,
+	"expected": [
+		{
+			"smallData_year": 2009,
+			"smallData_dept": "wood",
+			"smallData_id": "491",
+			"smallData_avg": 78.71
+		},
+		{
+			"smallData_year": 1900,
+			"smallData_dept": "wood",
+			"smallData_id": "491",
+			"smallData_avg": 78.71
+		},
+		{
+			"smallData_year": 2010,
+			"smallData_dept": "wood",
+			"smallData_id": "491",
+			"smallData_avg": 80.79
+		},
+		{
+			"smallData_year": 1900,
+			"smallData_dept": "wood",
+			"smallData_id": "491",
+			"smallData_avg": 80.79
+		},
+		{
+			"smallData_year": 2012,
+			"smallData_dept": "wood",
+			"smallData_id": "491",
+			"smallData_avg": 72.32
+		},
+		{
+			"smallData_year": 1900,
+			"smallData_dept": "wood",
+			"smallData_id": "491",
+			"smallData_avg": 72.32
+		},
+		{
+			"smallData_year": 2013,
+			"smallData_dept": "wood",
+			"smallData_id": "491",
+			"smallData_avg": 81.9
+		},
+		{
+			"smallData_year": 1900,
+			"smallData_dept": "wood",
+			"smallData_id": "491",
+			"smallData_avg": 81.9
+		},
+		{
+			"smallData_year": 2014,
+			"smallData_dept": "wood",
+			"smallData_id": "491",
+			"smallData_avg": 77.37
+		},
+		{
+			"smallData_year": 1900,
+			"smallData_dept": "wood",
+			"smallData_id": "491",
+			"smallData_avg": 77.37
+		},
+		{
+			"smallData_year": 2008,
+			"smallData_dept": "wood",
+			"smallData_id": "491",
+			"smallData_avg": 73.95
+		},
+		{
+			"smallData_year": 1900,
+			"smallData_dept": "wood",
+			"smallData_id": "491",
+			"smallData_avg": 73.95
+		},
+		{
+			"smallData_year": 2011,
+			"smallData_dept": "wood",
+			"smallData_id": "491",
+			"smallData_avg": 73.45
+		},
+		{
+			"smallData_year": 1900,
+			"smallData_dept": "wood",
+			"smallData_id": "491",
+			"smallData_avg": 73.45
+		},
+		{
+			"smallData_year": 2015,
+			"smallData_dept": "wood",
+			"smallData_id": "491",
+			"smallData_avg": 78.63
+		},
+		{
+			"smallData_year": 1900,
+			"smallData_dept": "wood",
+			"smallData_id": "491",
+			"smallData_avg": 78.63
+		}
+	]
+}

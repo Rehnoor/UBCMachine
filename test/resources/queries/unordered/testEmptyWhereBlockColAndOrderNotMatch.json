@@ -1,0 +1,17 @@
+{
+	"title": "testEmptyWhereBlockColAndOrderNotMatch",
+	"input": {
+		"WHERE": {},
+		"OPTIONS": {
+			"COLUMNS": [
+				"sections_year",
+				"sections_dept",
+				"sections_id",
+				"sections_avg"
+			],
+			"ORDER": "smallData_avg"
+		}
+	},
+	"errorExpected": true,
+	"expected": "InsightError"
+}

@@ -101,13 +101,19 @@ export default class InsightFacade implements IInsightFacade {
 					for (let section of course.result) {
 						const hasAllKeys = requiredSectionKeys.every((k) => k in section);
 						if (hasAllKeys) {
+							let yearVal = +section.Year;
+							if ("Section" in section) {
+								if (section.Section === "overall") {
+									yearVal = 1900;
+								}
+							}
 							const newSection = new Section(
 								String(section.id),
 								section.Course,
 								section.Title,
 								section.Professor,
 								section.Subject,
-								+section.Year,
+								yearVal,
 								section.Avg,
 								section.Pass,
 								section.Fail,
@@ -119,7 +125,7 @@ export default class InsightFacade implements IInsightFacade {
 				}
 			} catch (error) {
 				// NOTE: we don't want to stop parsing just because we encounter one badly formatted file
-				console.log("encountered a poorly formatted json string in parseStringDataToSections");
+				// console.log("encountered a poorly formatted json string in parseStringDataToSections");
 			}
 		}
 	}
@@ -231,16 +237,16 @@ export default class InsightFacade implements IInsightFacade {
 				// ***********OPTIONS STUFF***********
 				let orderIndex: number = Object.keys(optionsVal).indexOf("ORDER");
 				let orderVal: any = Object.values(optionsVal)[orderIndex];
-				this.validateColumnsAndOrder(optionsVal, columnList, orderVal);
+				try {
+					this.validateColumnsAndOrder(optionsVal, columnList, orderVal);
+				} catch (e) {
+					return Promise.reject(e);
+				}
 				// ***********************************
 				// ************WHERE STUFF***********
-				// TODO: do this check in runQuery
-				if (Object.values(query)[whereBlockIndex].length === 0) {
-					return Promise.resolve([]); // perform query, but if number of results is > 5000, reject
-				}
 				let whereVal: any = topLevelVals[whereBlockIndex];
 				try {
-					let queryTree: Node = this.queryEngine.buildWhereTree(whereVal);
+					let queryTree: Node = this.queryEngine.buildWhereTree(whereVal, columnList);
 					if (!this.dataIDisValid(queryTree)) {
 						return Promise.reject(new InsightError("Entered dataid is not valid"));
 					}
