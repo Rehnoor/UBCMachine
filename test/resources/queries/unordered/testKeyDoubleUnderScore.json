@@ -1,0 +1,21 @@
+{
+	"title": "testKeyDoubleUnderScore",
+	"input": {
+		"WHERE": {
+			"GT": {
+				"sections__avg": 97
+			}
+		},
+		"OPTIONS": {
+			"COLUMNS": [
+				"sections_year",
+				"sections_dept",
+				"sections_id",
+				"sections_avg",
+				"sections_instructor"
+			]
+		}
+	},
+	"errorExpected": true,
+	"expected": "InsightError"
+}

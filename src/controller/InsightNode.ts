@@ -153,3 +153,20 @@ export class NegationNode extends Node {
 		return !this.getChildren()[0].validateSection(section);
 	}
 }
+
+export class EmptyNode extends Node {
+	// TODO: this is a really terrible implementation and requires columnList to be valid + non-empty
+	// 		(assumes that first idstring in columnList will reference a valid dataset)
+	constructor(columnList: string[]) {
+		super();
+		this.setDataID(columnList[0].split("_", 2)[0]);
+		// console.log("new Empty node with id:" + this.getdataID());
+	}
+	public nodeMessage(): string {
+		return "";
+	}
+
+	public validateSection(section: Section): boolean {
+		return true;
+	}
+}

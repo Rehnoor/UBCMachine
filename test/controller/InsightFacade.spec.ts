@@ -205,7 +205,8 @@ describe("InsightFacade", function () {
 
 			// Load the datasets specified in datasetsToQuery and add them to InsightFacade.
 			// Will *fail* if there is a problem reading ANY dataset.
-			const loadDatasetPromises = [facade.addDataset("sections", sections, InsightDatasetKind.Sections)];
+			const loadDatasetPromises = [facade.addDataset("sections", sections, InsightDatasetKind.Sections),
+				facade.addDataset("smallData", smallDataset, InsightDatasetKind.Sections)];
 
 			return Promise.all(loadDatasetPromises);
 		});
@@ -299,7 +300,7 @@ describe("InsightFacade", function () {
 			]);
 		});
 	});
-	describe("small query tests to step through", function() {
+	describe("test empty where block", function() {
 		before(function() {
 			facade = new InsightFacade();
 			const dataSetPromises = [facade.addDataset("smallSet", smallDataset, InsightDatasetKind.Sections)];
@@ -307,23 +308,13 @@ describe("InsightFacade", function () {
 		});
 		it("should should query WOOD 491", function() {
 			facade.performQuery({
-				WHERE: {
-					EQ: {
-						smallSet_year: 2010
-					}
-				},
+				WHERE: {},
 				OPTIONS: {
 					COLUMNS: [
 						"smallSet_uuid",
 						"smallSet_id",
-						"smallSet_title",
-						"smallSet_instructor",
 						"smallSet_dept",
-						"smallSet_year",
-						"smallSet_avg",
-						"smallSet_pass",
-						"smallSet_fail",
-						"smallSet_audit"
+						"smallSet_year"
 					]
 				}
 			});

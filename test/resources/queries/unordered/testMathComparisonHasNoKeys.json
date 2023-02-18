@@ -1,0 +1,19 @@
+{
+	"title": "testMathComparisonHasNoKeys",
+	"input": {
+		"WHERE": {
+			"EQ": {}
+		},
+		"OPTIONS": {
+			"COLUMNS": [
+				"sections_year",
+				"sections_dept",
+				"sections_id",
+				"sections_avg",
+				"sections_instructor"
+			]
+		}
+	},
+	"errorExpected": true,
+	"expected": "InsightError"
+}

@@ -1,4 +1,4 @@
-import {LogicNode, MathNode, NegationNode, Node, StringNode} from "./InsightNode";
+import {EmptyNode, LogicNode, MathNode, NegationNode, Node, StringNode} from "./InsightNode";
 import {InsightError, InsightResult, ResultTooLargeError} from "./IInsightFacade";
 import {DataFrame} from "./InsightDataFrame";
 
@@ -16,14 +16,10 @@ export class QueryEngine {
 		return key === "NOT";
 	}
 	public validateSField(sfield: string) {
-		let bOne: boolean = sfield === "dept" || sfield === "id" || sfield === "instructor";
-		let bTwo: boolean = sfield === "title" || sfield === "uuid";
-		return bOne || bTwo;
+		return ["dept", "id", "instructor", "title", "uuid"].includes(sfield);
 	}
 	public validateMField(mfield: string) {
-		let bOne: boolean = mfield === "avg" || mfield === "pass" || mfield === "fail";
-		let bTwo: boolean = mfield === "audit" || mfield === "year";
-		return bOne || bTwo;
+		return ["avg", "pass", "fail", "audit", "year"].includes(mfield);
 	}
 	private handleLogicComparison(query: any, key: any): Node{
 		let lNode: Node = new LogicNode(key);
@@ -31,9 +27,12 @@ export class QueryEngine {
 		if (filterList.length === 0) {
 			throw new InsightError("Logic filter was given empty filter list, must contain at least one filter");
 		}
-		console.log(lNode.nodeMessage());
+		// console.log(lNode.nodeMessage());
 		for (let filter in filterList) {
-			lNode.addChild(this.buildWhereTree(filterList[filter]));
+			if (Object.keys(filterList[filter]).length === 0) {
+				throw new InsightError("Invalid filter passed to logic node");
+			}
+			lNode.addChild(this.buildWhereTree(filterList[filter], []));
 		}
 		return lNode;
 	}
@@ -54,7 +53,7 @@ export class QueryEngine {
 		let n: any = Object.values(val)[0];
 		let num: number = n;
 		let mNode: Node = new MathNode(key, mfield, num, dataid);
-		console.log(mNode.nodeMessage());
+		// console.log(mNode.nodeMessage());
 		if (this.validateMField(mfield)) {
 			return mNode;
 		} else {
@@ -98,7 +97,7 @@ export class QueryEngine {
 			throw new InsightError("Invalid input string, (*) only be the first or last characters of input strings");
 		}
 		let sNode: Node = new StringNode(sfield, inputString, dataid);
-		console.log(sNode.nodeMessage());
+		// console.log(sNode.nodeMessage());
 		if (this.validateSField(sfield)) {
 			return sNode;
 		} else {
@@ -110,22 +109,29 @@ export class QueryEngine {
 			throw new InsightError("Negation filter can only have one internal filter");
 		}
 		let internalFilter: any = Object.values(query)[0];
-		let nNodeChild = this.buildWhereTree(internalFilter);
+		if (Object.keys(internalFilter).length !== 1) {
+			throw new InsightError("Negation filter can only have one internal filter");
+		}
+		let nNodeChild = this.buildWhereTree(internalFilter, []);
 		let nNode: Node = new NegationNode(nNodeChild);
-		console.log(nNode.nodeMessage());
+		// console.log(nNode.nodeMessage());
 		return nNode;
 	}
 	// THROWS: InsightError
-	public buildWhereTree(query: any): Node {
-		let key = Object.keys(query)[0];
+	// TODO: this should be done in a cleaner way, also we assume here that the columnList has been validated
+	public buildWhereTree(whereBlock: any, columnList: string[]): Node {
+		if (Object.keys(whereBlock).length === 0) {
+			return new EmptyNode(columnList);
+		}
+		let key = Object.keys(whereBlock)[0];
 		if (this.isLogicComparison(key)) {
-			return this.handleLogicComparison(query, key);
+			return this.handleLogicComparison(whereBlock, key);
 		} else if (this.isMathComparison(key)) {
-			return this.handleMathComparison(query, key);
+			return this.handleMathComparison(whereBlock, key);
 		} else if (this.isStringComparison(key)) {
-			return this.handleStringComparison(query, key);
+			return this.handleStringComparison(whereBlock, key);
 		} else if (this.isNegation(key)) {
-			return this.handleNegation(query, key);
+			return this.handleNegation(whereBlock, key);
 		} else {
 			throw new InsightError("Invalid key for filter");
 		}
@@ -184,7 +190,7 @@ export class QueryEngine {
 	}
 
 	// THROWS: ResultTooLargeError
-	// TODO: columns are not split into idstring and (m/s)field
+	// NOTE: columns are still in format "idstring_(m | s)field"
 	public runQuery(dataFrame: DataFrame, queryTree: Node, columns: string[],
 		order: string | undefined): InsightResult[] {
 		// TOO MANY PARAMS
