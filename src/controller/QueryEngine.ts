@@ -6,21 +6,27 @@ export class QueryEngine {
 	public isLogicComparison(key: any): boolean {
 		return key === "AND" || key === "OR";
 	}
+
 	public isMathComparison(key: any): boolean {
 		return key === "LT" || key === "GT" || key === "EQ";
 	}
+
 	public isStringComparison(key: any): boolean {
 		return key === "IS";
 	}
+
 	public isNegation(key: any): boolean {
 		return key === "NOT";
 	}
+
 	public validateSField(sfield: string) {
 		return ["dept", "id", "instructor", "title", "uuid"].includes(sfield);
 	}
+
 	public validateMField(mfield: string) {
 		return ["avg", "pass", "fail", "audit", "year"].includes(mfield);
 	}
+
 	private handleLogicComparison(query: any, key: any): Node{
 		let lNode: Node = new LogicNode(key);
 		let filterList: any = Object.values(query)[0];
@@ -36,6 +42,7 @@ export class QueryEngine {
 		}
 		return lNode;
 	}
+
 	private handleMathComparison(query: any, key: any): Node{
 		let val: any = Object.values(query)[0]; // set as any so u can get keys and vals
 		if (Object.keys(val).length !== 1) {
@@ -60,6 +67,7 @@ export class QueryEngine {
 			throw new InsightError("Invalid mfield");
 		}
 	}
+
 	private validateWildcard(inputString: string): boolean {
 		if (inputString.includes("*")) {
 			if (inputString.split("*").length > 3) {
@@ -77,6 +85,7 @@ export class QueryEngine {
 		}
 		return true;
 	}
+
 	private handleStringComparison(query: any, key: any): Node{
 		let val: any = Object.values(query)[0];
 		if (Object.keys(val).length !== 1) {
@@ -104,6 +113,7 @@ export class QueryEngine {
 			throw new InsightError("Invalid sfield");
 		}
 	}
+
 	private handleNegation(query: any, key: any): Node{
 		if (Object.values(query).length !== 1) {
 			throw new InsightError("Negation filter can only have one internal filter");
@@ -117,6 +127,7 @@ export class QueryEngine {
 		// console.log(nNode.nodeMessage());
 		return nNode;
 	}
+
 	// THROWS: InsightError
 	// TODO: this should be done in a cleaner way, also we assume here that the columnList has been validated
 	public buildWhereTree(whereBlock: any, columnList: string[]): Node {
@@ -136,6 +147,7 @@ export class QueryEngine {
 			throw new InsightError("Invalid key for filter");
 		}
 	}
+
 	private dataIDConsistencyCheck(columnList: any): boolean {
 		let x: string = columnList[0].split("_", 2)[0];
 		for (let y in columnList) {
@@ -148,6 +160,7 @@ export class QueryEngine {
 		}
 		return true;
 	}
+
 	public isValidColumns(columnList: any, dataFrames: DataFrame[]): boolean {
 		let col: string = columnList[0];
 		let colDataID: string = col.split("_", 2)[0];
@@ -171,6 +184,7 @@ export class QueryEngine {
 		}
 		return true;
 	}
+
 	public isValidColumnsWOrder(columnList: any, dataFrames: DataFrame[], orderVal: any): boolean {
 		let colVerification: boolean = this.isValidColumns(columnList, dataFrames);
 		let foundMatchingColumn: boolean = false;
@@ -181,6 +195,7 @@ export class QueryEngine {
 		}
 		return foundMatchingColumn && colVerification;
 	}
+
 	public getDataID(n: Node): string {
 		if (n.getChildren().length === 0) {
 			return n.getdataID();
