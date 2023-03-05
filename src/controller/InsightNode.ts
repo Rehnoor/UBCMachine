@@ -7,18 +7,22 @@ export abstract class Node {
 		this.children = [];
 		this.dataid = "";
 	}
+
 	public setDataID(dataid: string) {
 		this.dataid = dataid;
 	}
+
 	public abstract nodeMessage(): string;
 	public abstract validateSection(section: Section): boolean;
 
 	public addChild(child: Node) {
 		this.children.push(child);
 	}
+
 	public getChildren(): Node[] {
 		return this.children;
 	}
+
 	public getdataID(): string {
 		return this.dataid;
 	}
@@ -30,6 +34,7 @@ export class LogicNode extends Node {
 		super();
 		this.type = type;
 	}
+
 	public getType(): string {
 		return this.type;
 	}
@@ -68,10 +73,12 @@ export class MathNode extends Node {
 		this.type = type;
 		this.setDataID(dataid);
 	}
+
 	public nodeMessage(): string {
 		let s: string = "\ndataid: " + this.getdataID();
 		return "______\nMATH NODE WITH TYPE: " + this.type + "\nmfield: " + this.mfield + "\nnumber: " + this.num + s;
 	}
+
 	private getMfieldVal(section: Section): number {
 		if (this.mfield === "avg") {
 			return section.avg;
@@ -85,6 +92,7 @@ export class MathNode extends Node {
 			return section.year;
 		}
 	}
+
 	public validateSection(section: Section): boolean {
 		let sectionVal: number = this.getMfieldVal(section);
 		if (this.type === "LT") {
@@ -106,10 +114,12 @@ export class StringNode extends Node {
 		this.sfield = sfield;
 		this.setDataID(dataid);
 	}
+
 	public nodeMessage(): string {
 		let s: string = "\ndataid: " + this.getdataID();
 		return "______\nSTRING NODE WITH inputString: " + this.inputString + "\nsfield: " + this.sfield + s;
 	}
+
 	private getSfield(section: Section): string {
 		if (this.sfield === "dept") {
 			return section.dept;
@@ -123,6 +133,7 @@ export class StringNode extends Node {
 			return section.uuid;
 		}
 	}
+
 	public validateSection(section: Section): boolean {
 		let sectionVal: string = this.getSfield(section);
 		if (this.inputString.includes("*")) {
@@ -145,6 +156,7 @@ export class NegationNode extends Node {
 		super();
 		this.addChild(child);
 	}
+
 	public nodeMessage(): string {
 		return "______\nNEGATION NODE WITH PREVIOUS NODE BEING INTERNAL FILTER";
 	}
@@ -162,6 +174,7 @@ export class EmptyNode extends Node {
 		this.setDataID(columnList[0].split("_", 2)[0]);
 		// console.log("new Empty node with id:" + this.getdataID());
 	}
+
 	public nodeMessage(): string {
 		return "";
 	}
