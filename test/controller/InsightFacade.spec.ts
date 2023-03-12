@@ -21,11 +21,13 @@ describe("InsightFacade", function () {
 	// Declare datasets used in tests. You should add more datasets like this!
 	let sections: string;
 	let smallDataset: string;
+	let rooms: string;
 
 	before(function () {
 		// This block runs once and loads the datasets.
 		sections = getContentFromArchives("pair.zip");
 		smallDataset = getContentFromArchives("smallValidSet.zip");
+		rooms = getContentFromArchives("campus.zip");
 		// Just in case there is anything hanging around from a previous run of the test suite
 		clearDisk();
 	});
@@ -99,7 +101,7 @@ describe("InsightFacade", function () {
 				return expect(result).to.eventually.be.rejectedWith(InsightError);
 			});
 
-			it("should reject add with kind == Rooms (for c0 at least)", function () {
+			it("should reject add with kind == Rooms but type == sections", function () {
 				const result = facade.addDataset("1288", sections, InsightDatasetKind.Rooms);
 				return expect(result).to.eventually.be.rejectedWith(InsightError);
 			});
@@ -117,6 +119,10 @@ describe("InsightFacade", function () {
 			it("should add this small valid dataset", function () {
 				const result = facade.addDataset("smallSet", smallDataset, InsightDatasetKind.Sections);
 				return expect(result).to.eventually.deep.equal(["smallSet"]);
+			});
+			it("should add the full rooms dataset", function() {
+				const result = facade.addDataset("roomSet", rooms, InsightDatasetKind.Rooms);
+				return expect(result).to.eventually.deep.equal(["roomSet"]);
 			});
 
 			it("should add two valid datasets", async function () {
