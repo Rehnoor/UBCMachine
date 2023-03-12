@@ -1,6 +1,6 @@
 import {EmptyNode, LogicNode, MathNode, NegationNode, Node, StringNode} from "./InsightNode";
 import {InsightError, InsightResult, ResultTooLargeError} from "./IInsightFacade";
-import {DataFrame} from "./InsightDataFrame";
+import {SectionDataSet} from "./InsightDataFrame";
 
 export class QueryEngine {
 	public isLogicComparison(key: any): boolean {
@@ -161,7 +161,7 @@ export class QueryEngine {
 		return true;
 	}
 
-	public isValidColumns(columnList: any, dataFrames: DataFrame[]): boolean {
+	public isValidColumns(columnList: any, dataFrames: SectionDataSet[]): boolean {
 		let col: string = columnList[0];
 		let colDataID: string = col.split("_", 2)[0];
 		let dataIDFound: boolean = false;
@@ -185,7 +185,7 @@ export class QueryEngine {
 		return true;
 	}
 
-	public isValidColumnsWOrder(columnList: any, dataFrames: DataFrame[], orderVal: any): boolean {
+	public isValidColumnsWOrder(columnList: any, dataFrames: SectionDataSet[], orderVal: any): boolean {
 		let colVerification: boolean = this.isValidColumns(columnList, dataFrames);
 		let foundMatchingColumn: boolean = false;
 		for (let c in columnList) {
@@ -206,12 +206,12 @@ export class QueryEngine {
 
 	// THROWS: ResultTooLargeError
 	// NOTE: columns are still in format "idstring_(m | s)field"
-	public runQuery(dataFrame: DataFrame, queryTree: Node, columns: string[],
+	public runQuery(dataFrame: SectionDataSet, queryTree: Node, columns: string[],
 		order: string | undefined): InsightResult[] {
 		// TOO MANY PARAMS
 		let insightArray: InsightResult[] = [];
 		let resultCounter = 0;
-		for (const section of dataFrame.getSections()) {
+		for (const section of dataFrame.getRows()) {
 			if (queryTree.validateSection(section)) {
 				resultCounter += 1;
 				if (resultCounter > 5000) {

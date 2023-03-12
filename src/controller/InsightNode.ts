@@ -1,4 +1,4 @@
-import {DataFrame, Section} from "./InsightDataFrame";
+import {SectionDataSet, Section} from "./InsightDataFrame";
 
 export abstract class Node {
 	private children: Node[];

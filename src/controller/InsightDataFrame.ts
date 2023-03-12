@@ -32,19 +32,14 @@ export class Room {
 	) {}
 }
 
-export class DataFrame {
+export abstract class DataSet {
 	private readonly id: string;
-	private numRows: number = 0;
 	private readonly kind: InsightDatasetKind;
-	private readonly sections: Section[] = [];
+	protected numRows: number = 0;
+
 	constructor(id: string, kind: InsightDatasetKind) {
 		this.id = id;
 		this.kind = kind;
-	}
-
-	public addSection(section: Section) {
-		this.sections.push(section);
-		this.numRows++;
 	}
 
 	public getNumRows(): number {
@@ -59,7 +54,42 @@ export class DataFrame {
 		return this.kind;
 	}
 
-	public getSections(): Section[] {
-		return this.sections;
+	public abstract addRow(row: Section | Room): boolean;
+
+	public abstract getRows(): Array<Section | Room>;
+}
+
+export class SectionDataSet extends DataSet{
+	private readonly rows: Section[] = [];
+
+	public addRow(row: Section | Room): boolean {
+		if (row instanceof Section) {
+			this.rows.push(row);
+			this.numRows++;
+			return true;
+		}
+		return false;
 	}
+
+	public getRows(): Section[] {
+		return this.rows;
+	}
+}
+
+export class RoomDataSet extends DataSet {
+
+	private readonly rows: Room[] = [];
+	public addRow(row: Section | Room): boolean {
+		if (row instanceof Room) {
+			this.rows.push(row);
+			this.numRows++;
+			return true;
+		}
+		return false;
+	}
+
+	public getRows(): Room[] {
+		return this.rows;
+	}
+
 }

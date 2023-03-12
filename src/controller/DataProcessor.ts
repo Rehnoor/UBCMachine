@@ -1,10 +1,10 @@
-import {DataFrame, Section} from "./InsightDataFrame";
+import {SectionDataSet, Section} from "./InsightDataFrame";
 import * as fs from "fs-extra";
 import {InsightDataset, InsightDatasetKind, InsightError, NotFoundError} from "./IInsightFacade";
 import * as zip from "jszip";
 
 export default class DataProcessor {
-	public readonly dataFrames: DataFrame[];
+	public readonly dataFrames: SectionDataSet[];
 	constructor() {
 		// TODO: we cannot make ANY assumptions about the contents of the data directory
 		// 		 --> make sure that we only create new dataframes from good objects (that have all keys)
@@ -23,10 +23,10 @@ export default class DataProcessor {
 	}
 
 	// MAKE SURE the object passed to this method has all the fields of a DataFrame
-	private createDataFrameFromObject(obj: object): DataFrame {
+	private createDataFrameFromObject(obj: object): SectionDataSet {
 		// This feels a bit hacky
 		// must be changed if we store anything else in the data directory other than persisted datasets
-		let result = new DataFrame("this should be changed", InsightDatasetKind.Rooms);
+		let result = new SectionDataSet("this should be changed", InsightDatasetKind.Rooms);
 		return Object.assign(result, obj);
 	}
 
@@ -47,7 +47,7 @@ export default class DataProcessor {
 	}
 
 	// parses json section data from courseArray and pushes into dataFrame
-	private parseStringDataToSections(courseArray: string[], dataFrame: DataFrame) {
+	private parseStringDataToSections(courseArray: string[], dataFrame: SectionDataSet) {
 		let requiredSectionKeys = [
 			"id",
 			"Course",
@@ -88,7 +88,7 @@ export default class DataProcessor {
 								section.Fail,
 								section.Audit
 							);
-							dataFrame.addSection(newSection);
+							dataFrame.addRow(newSection);
 						}
 					}
 				}
@@ -123,7 +123,7 @@ export default class DataProcessor {
 				return Promise.reject(new InsightError("This ID has already been added"));
 			}
 		}
-		let newDataFrame = new DataFrame(id, kind);
+		let newDataFrame = new SectionDataSet(id, kind);
 		return new Promise<string[]>((resolve, reject) => {
 			this.convertFilesToString(content)
 				.then((jsonCourseArray) => {
