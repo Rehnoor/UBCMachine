@@ -117,12 +117,63 @@ export default class DataProcessor {
 		});
 	}
 
-	private validateTable(htmlNode: any): boolean {
+	private validateBuildingTable(htmlNode: any): boolean {
+		console.log("entering table validation");
+		const layerOne = htmlNode.childNodes;
+		if (layerOne === undefined) {
+			return false;
+		}
+		let tbody;
+		for (let child of layerOne) {
+			if (child.nodeName !== undefined && child.nodeName === "tbody") {
+				tbody = child;
+				break;
+			}
+		}
+		if (tbody === undefined) {
+			return false;
+		}
+		let rowData = tbody.childNodes; // array of htmlNode: we are looking for tr
+		let tableRow;
+		for (let rowVal of rowData) {
+			if (rowVal.nodeName !== undefined && rowVal.nodeName === "tr") {
+				tableRow = rowVal;
+				break;
+			}
+		}
+		if (tableRow === undefined) {
+			return false;
+		}
+		// check for 5 required classes (may have more, order doesn't matter)
+		// make a separate class to do this (tableValidator or sum bs)
+		if (tableRow.childNodes === undefined) {
+			return false;
+		}
+		// These are found in td node -> attrs [] -> {name: 'class', value: ~~~~~}
+		const requiredColumns = ["views-field views-field-field-building-image",
+								 "views-field views-field-field-building-code",
+								 "views-field views-field-title",
+								 "views-field views-field-field-building-address",
+								 "views-field views-field-nothing"];
+		for (let tableData of tableRow.childNodes) {
+			if (tableData.nodeName !== undefined && tableData.nodeName === "td") {
+				const attributes = tableData.attrs;
+				if (attributes === undefined) {
+					return false;
+				}
+				for (let attribute of attributes) {
+					if (attribute.value !== undefined && requiredColumns.includes(attribute.value)) {
+						// Just need to make a class that will keep track of which required columns have been satisfied
+						console.log("found", attribute.value,"!");
+					}
+				}
+			}
+		}
 		return false;
 	}
 
 	// Recursive function to find a valid table from htmlNode
-	// Returns undefined if no valid tables exist
+	// Returns undefined if no valid tables exist, if found returns tbody
 	private findValidTable(htmlNode: any): any {
 		if (htmlNode === null || htmlNode === undefined) {
 			return undefined;
@@ -130,7 +181,7 @@ export default class DataProcessor {
 		if (htmlNode.nodeName === "table") {
 			console.log("found a table!");
 			// validate this table (does it have all required keys)
-			if (this.validateTable(htmlNode)) {
+			if (this.validateBuildingTable(htmlNode)) {
 				return htmlNode;
 			} else {
 				return undefined;
@@ -148,7 +199,7 @@ export default class DataProcessor {
 	}
 
 	private parseRoomData(id: string, content: string): Promise<string[]> {
-		// TODO: this is clearly duplicate of addDataset with sections -> refactor
+		// TODO: REFACTOR! this is clearly duplicate of addDataset with sections -> refactor
 		for (let dataSet of this.roomDataSets) {
 			if (dataSet.getID() === id) {
 				return Promise.reject(new InsightError("This ID has already been added"));
