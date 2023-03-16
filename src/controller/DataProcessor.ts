@@ -3,8 +3,11 @@ import * as fs from "fs-extra";
 import {InsightDataset, InsightDatasetKind, InsightError, NotFoundError} from "./IInsightFacade";
 import * as zip from "jszip";
 import {parse} from "parse5";
+import HTMLBuildingTableUtil from "./HTMLBuildingTableUtil";
 
 export default class DataProcessor {
+
+	private tableBuilder = new HTMLBuildingTableUtil();
 
 	// TODO: refactor to just have one array of type DataSet
 	public readonly sectionDataSets: SectionDataSet[];
@@ -117,19 +120,10 @@ export default class DataProcessor {
 		});
 	}
 
+	// pass in a <table> html node
 	private validateBuildingTable(htmlNode: any): boolean {
 		console.log("entering table validation");
-		const layerOne = htmlNode.childNodes;
-		if (layerOne === undefined) {
-			return false;
-		}
-		let tbody;
-		for (let child of layerOne) {
-			if (child.nodeName !== undefined && child.nodeName === "tbody") {
-				tbody = child;
-				break;
-			}
-		}
+		const tbody = this.tableBuilder.getTableBody(htmlNode);
 		if (tbody === undefined) {
 			return false;
 		}
@@ -149,27 +143,7 @@ export default class DataProcessor {
 		if (tableRow.childNodes === undefined) {
 			return false;
 		}
-		// These are found in td node -> attrs [] -> {name: 'class', value: ~~~~~}
-		const requiredColumns = ["views-field views-field-field-building-image",
-								 "views-field views-field-field-building-code",
-								 "views-field views-field-title",
-								 "views-field views-field-field-building-address",
-								 "views-field views-field-nothing"];
-		for (let tableData of tableRow.childNodes) {
-			if (tableData.nodeName !== undefined && tableData.nodeName === "td") {
-				const attributes = tableData.attrs;
-				if (attributes === undefined) {
-					return false;
-				}
-				for (let attribute of attributes) {
-					if (attribute.value !== undefined && requiredColumns.includes(attribute.value)) {
-						// Just need to make a class that will keep track of which required columns have been satisfied
-						console.log("found", attribute.value,"!");
-					}
-				}
-			}
-		}
-		return false;
+		return this.tableBuilder.isValidBuildingTable(tableRow);
 	}
 
 	// Recursive function to find a valid table from htmlNode
@@ -198,14 +172,13 @@ export default class DataProcessor {
 		}
 	}
 
-	private parseRoomData(id: string, content: string): Promise<string[]> {
+	private addRoomDataSet(id: string, content: string): Promise<string[]> {
 		// TODO: REFACTOR! this is clearly duplicate of addDataset with sections -> refactor
 		for (let dataSet of this.roomDataSets) {
 			if (dataSet.getID() === id) {
 				return Promise.reject(new InsightError("This ID has already been added"));
 			}
 		}
-		let newDataFrame = new RoomDataSet(id, InsightDatasetKind.Rooms);
 		zip.loadAsync(content, {base64: true}).then(async (fileData) => {
 			const htmlText = await fileData.file("index.htm")?.async("string");
 			if (htmlText === null || htmlText === undefined) {
@@ -224,7 +197,21 @@ export default class DataProcessor {
 			}
 			// recursively search this htmlTree for tables -> check if the tables are valid
 			const tableNode = this.findValidTable(htmlTree);
-			console.log(tableNode);
+			if (tableNode === undefined) {
+				return Promise.reject(new InsightError("index.htm contains no valid buildings table"));
+			}
+			// now we have the correct table
+			const buildings = this.tableBuilder.parseBuildingTable(tableNode);
+			let newDataFrame = new RoomDataSet(id, InsightDatasetKind.Rooms);
+			// now use the buildings links and metadata to find Rooms tables and create rooms
+			let rooms = this.tableBuilder.parseRoomFiles(buildings, fileData);
+			for (let room of rooms) {
+				newDataFrame.addRow(room);
+			}
+			if (newDataFrame.getNumRows() > 0) {
+				return Promise.resolve(newDataFrame);
+			}
+			return Promise.reject(new InsightError("Dataset in zipfile contained no valid rooms"));
 		});
 		return Promise.reject();
 	}
@@ -234,7 +221,7 @@ export default class DataProcessor {
 			return Promise.reject(new InsightError("Invalid ID parameter"));
 		}
 		if (kind === InsightDatasetKind.Rooms) {
-			return this.parseRoomData(id, content);
+			return this.addRoomDataSet(id, content);
 		}
 		for (let dataSet of this.sectionDataSets) {
 			if (dataSet.getID() === id) {
