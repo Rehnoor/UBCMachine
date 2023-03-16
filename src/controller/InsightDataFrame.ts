@@ -16,11 +16,13 @@ export class Section {
 }
 
 export class Room {
+
+	public readonly name: string;
 	constructor(
 		public readonly fullname: string,
 		public readonly shortname: string,
 		public readonly number: string,
-		public readonly name: string, // should be shortname + "_" + number
+		// public readonly name: string, // should be shortname + "_" + number
 		public readonly address: string,
 		public readonly lat: number,
 		public readonly lon: number,
@@ -29,7 +31,9 @@ export class Room {
 		public readonly furniture: string,
 		public readonly href: string
 
-	) {}
+	) {
+		this.name = this.shortname + "_" + this.number;
+	}
 }
 
 export abstract class DataSet {

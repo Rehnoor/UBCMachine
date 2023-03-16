@@ -3,11 +3,11 @@ import * as fs from "fs-extra";
 import {InsightDataset, InsightDatasetKind, InsightError, NotFoundError} from "./IInsightFacade";
 import * as zip from "jszip";
 import {parse} from "parse5";
-import HTMLBuildingTableUtil from "./HTMLBuildingTableUtil";
+import HTMLTableBuilder from "./HTMLTableBuilder";
 
 export default class DataProcessor {
 
-	private tableBuilder = new HTMLBuildingTableUtil();
+	private tableBuilder = new HTMLTableBuilder();
 
 	// TODO: refactor to just have one array of type DataSet
 	public readonly sectionDataSets: SectionDataSet[];
@@ -120,57 +120,6 @@ export default class DataProcessor {
 		});
 	}
 
-	// pass in a <table> html node
-	private validateBuildingTable(htmlNode: any): boolean {
-		console.log("entering table validation");
-		const tbody = this.tableBuilder.getTableBody(htmlNode);
-		if (tbody === undefined) {
-			return false;
-		}
-		let rowData = tbody.childNodes; // array of htmlNode: we are looking for tr
-		let tableRow;
-		for (let rowVal of rowData) {
-			if (rowVal.nodeName !== undefined && rowVal.nodeName === "tr") {
-				tableRow = rowVal;
-				break;
-			}
-		}
-		if (tableRow === undefined) {
-			return false;
-		}
-		// check for 5 required classes (may have more, order doesn't matter)
-		// make a separate class to do this (tableValidator or sum bs)
-		if (tableRow.childNodes === undefined) {
-			return false;
-		}
-		return this.tableBuilder.isValidBuildingTable(tableRow);
-	}
-
-	// Recursive function to find a valid table from htmlNode
-	// Returns undefined if no valid tables exist, if found returns tbody
-	private findValidTable(htmlNode: any): any {
-		if (htmlNode === null || htmlNode === undefined) {
-			return undefined;
-		}
-		if (htmlNode.nodeName === "table") {
-			console.log("found a table!");
-			// validate this table (does it have all required keys)
-			if (this.validateBuildingTable(htmlNode)) {
-				return htmlNode;
-			} else {
-				return undefined;
-			}
-		}
-		// check for child nodes
-		if (htmlNode.childNodes !== undefined){
-			for (let child of htmlNode.childNodes) {
-				const childResult = this.findValidTable(child);
-				if (childResult !== undefined) {
-					return childResult;
-				}
-			}
-		}
-	}
 
 	private addRoomDataSet(id: string, content: string): Promise<string[]> {
 		// TODO: REFACTOR! this is clearly duplicate of addDataset with sections -> refactor
@@ -179,7 +128,7 @@ export default class DataProcessor {
 				return Promise.reject(new InsightError("This ID has already been added"));
 			}
 		}
-		zip.loadAsync(content, {base64: true}).then(async (fileData) => {
+		return zip.loadAsync(content, {base64: true}).then(async (fileData) => {
 			const htmlText = await fileData.file("index.htm")?.async("string");
 			if (htmlText === null || htmlText === undefined) {
 				return Promise.reject(new InsightError("No index.htm file present"));
@@ -196,24 +145,28 @@ export default class DataProcessor {
 				return Promise.reject(new InsightError("Poorly formatted html"));
 			}
 			// recursively search this htmlTree for tables -> check if the tables are valid
-			const tableNode = this.findValidTable(htmlTree);
+			const tableNode = this.tableBuilder.findValidTable(htmlTree, "building");
 			if (tableNode === undefined) {
 				return Promise.reject(new InsightError("index.htm contains no valid buildings table"));
 			}
 			// now we have the correct table
 			const buildings = this.tableBuilder.parseBuildingTable(tableNode);
 			let newDataFrame = new RoomDataSet(id, InsightDatasetKind.Rooms);
+			// console.log(buildings);
 			// now use the buildings links and metadata to find Rooms tables and create rooms
-			let rooms = this.tableBuilder.parseRoomFiles(buildings, fileData);
-			for (let room of rooms) {
-				newDataFrame.addRow(room);
-			}
+			let rooms = await this.tableBuilder.parseRoomFiles(buildings, fileData);
+			console.log(rooms);
+			// gonna need to turn into one array of rooms
+			// for (let room of rooms) {
+			// 	newDataFrame.addRow(room);
+			// }
 			if (newDataFrame.getNumRows() > 0) {
-				return Promise.resolve(newDataFrame);
+				// add dataFrame to this.roomDataSets
+				// persist to disk
+				// resolve with list of all currently added IDs
 			}
 			return Promise.reject(new InsightError("Dataset in zipfile contained no valid rooms"));
 		});
-		return Promise.reject();
 	}
 
 	public addDataset(id: string, content: string, kind: InsightDatasetKind): Promise<string[]> {
