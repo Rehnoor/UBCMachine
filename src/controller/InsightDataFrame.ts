@@ -36,12 +36,15 @@ export class Room {
 	}
 }
 
-export abstract class DataSet {
+export class DataSet {
 	private readonly id: string;
 	private readonly kind: InsightDatasetKind;
-	protected numRows: number = 0;
+	private numRows: number = 0;
+
+	private readonly rows: Array<Section | Room>;
 
 	constructor(id: string, kind: InsightDatasetKind) {
+		this.rows = [];
 		this.id = id;
 		this.kind = kind;
 	}
@@ -58,42 +61,12 @@ export abstract class DataSet {
 		return this.kind;
 	}
 
-	public abstract addRow(row: Section | Room): boolean;
+	public addRow(row: Section | Room) {
+		this.rows.push(row);
+		this.numRows++;
+	};
 
-	public abstract getRows(): Array<Section | Room>;
-}
-
-export class SectionDataSet extends DataSet{
-	private readonly rows: Section[] = [];
-
-	public addRow(row: Section | Room): boolean {
-		if (row instanceof Section) {
-			this.rows.push(row);
-			this.numRows++;
-			return true;
-		}
-		return false;
-	}
-
-	public getRows(): Section[] {
+	public getRows(): Array<Section | Room> {
 		return this.rows;
 	}
-}
-
-export class RoomDataSet extends DataSet {
-
-	private readonly rows: Room[] = [];
-	public addRow(row: Section | Room): boolean {
-		if (row instanceof Room) {
-			this.rows.push(row);
-			this.numRows++;
-			return true;
-		}
-		return false;
-	}
-
-	public getRows(): Room[] {
-		return this.rows;
-	}
-
 }

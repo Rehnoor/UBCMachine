@@ -1,4 +1,4 @@
-import {RoomDataSet, Section, SectionDataSet} from "./InsightDataFrame";
+import {DataSet, Room, Section} from "./InsightDataFrame";
 import * as fs from "fs-extra";
 import {InsightDataset, InsightDatasetKind, InsightError, NotFoundError} from "./IInsightFacade";
 import * as zip from "jszip";
@@ -10,18 +10,18 @@ export default class DataProcessor {
 	private tableBuilder = new HTMLTableBuilder();
 
 	// TODO: refactor to just have one array of type DataSet
-	public readonly sectionDataSets: SectionDataSet[];
-	public readonly roomDataSets: RoomDataSet[];
+
+	public readonly dataSets: DataSet[];
+
 	constructor() {
 		// TODO: store rooms and sections in separate subfolders of data directory
-		this.sectionDataSets = [];
-		this.roomDataSets = [];
+		this.dataSets = [];
 		fs.ensureDirSync("./data/");
 		let fileNames = fs.readdirSync("./data/");
 		for (let fileName of fileNames) {
 			if (fileName.includes(".json")) {
 				let dataFrame = fs.readJsonSync("./data/" + fileName);
-				this.sectionDataSets.push(this.createDataFrameFromObject(dataFrame));
+				this.dataSets.push(this.createDataFrameFromObject(dataFrame));
 			}
 			// NOTE: need to actually create a "new DataFrame" instance or else we can't call DataFrame methods
 			//       like getID etc
@@ -29,10 +29,10 @@ export default class DataProcessor {
 	}
 
 	// MAKE SURE the object passed to this method has all the fields of a DataFrame
-	private createDataFrameFromObject(obj: object): SectionDataSet {
+	private createDataFrameFromObject(obj: object): DataSet {
 		// This feels a bit hacky
 		// must be changed if we store anything else in the data directory other than persisted datasets
-		let result = new SectionDataSet("this should be changed", InsightDatasetKind.Rooms);
+		let result = new DataSet("this should be changed", InsightDatasetKind.Rooms);
 		return Object.assign(result, obj);
 	}
 
@@ -53,7 +53,7 @@ export default class DataProcessor {
 	}
 
 	// parses json section data from courseArray and pushes into dataFrame
-	private parseStringDataToSections(courseArray: string[], dataFrame: SectionDataSet) {
+	private parseStringDataToSections(courseArray: string[], dataFrame: DataSet) {
 		let requiredSectionKeys = [
 			"id",
 			"Course",
@@ -123,7 +123,7 @@ export default class DataProcessor {
 
 	private addRoomDataSet(id: string, content: string): Promise<string[]> {
 		// TODO: REFACTOR! this is clearly duplicate of addDataset with sections -> refactor
-		for (let dataSet of this.roomDataSets) {
+		for (let dataSet of this.dataSets) {
 			if (dataSet.getID() === id) {
 				return Promise.reject(new InsightError("This ID has already been added"));
 			}
@@ -151,16 +151,19 @@ export default class DataProcessor {
 			}
 			// now we have the correct table
 			const buildings = this.tableBuilder.parseBuildingTable(tableNode);
-			let newDataFrame = new RoomDataSet(id, InsightDatasetKind.Rooms);
+			let newDataFrame = new DataSet(id, InsightDatasetKind.Rooms);
 			// console.log(buildings);
 			// now use the buildings links and metadata to find Rooms tables and create rooms
-			let rooms = await this.tableBuilder.parseRoomFiles(buildings, fileData);
-			console.log(rooms);
-			// gonna need to turn into one array of rooms
-			// for (let room of rooms) {
-			// 	newDataFrame.addRow(room);
-			// }
+			let buildingRoomsArray = await this.tableBuilder.parseRoomFiles(buildings, fileData);
+			let rooms: Room[] = [];
+			for (let buildingRooms of buildingRoomsArray) {
+				rooms = rooms.concat(buildingRooms);
+			}
+			for (let room of rooms) {
+				newDataFrame.addRow(room);
+			}
 			if (newDataFrame.getNumRows() > 0) {
+				console.log(newDataFrame);
 				// add dataFrame to this.roomDataSets
 				// persist to disk
 				// resolve with list of all currently added IDs
@@ -176,12 +179,12 @@ export default class DataProcessor {
 		if (kind === InsightDatasetKind.Rooms) {
 			return this.addRoomDataSet(id, content);
 		}
-		for (let dataSet of this.sectionDataSets) {
+		for (let dataSet of this.dataSets) {
 			if (dataSet.getID() === id) {
 				return Promise.reject(new InsightError("This ID has already been added"));
 			}
 		}
-		let newDataFrame = new SectionDataSet(id, kind);
+		let newDataFrame = new DataSet(id, kind);
 		return new Promise<string[]>((resolve, reject) => {
 			this.convertFilesToString(content)
 				.then((jsonCourseArray) => {
@@ -189,9 +192,9 @@ export default class DataProcessor {
 					if (newDataFrame.getNumRows() === 0) {
 						reject(new InsightError("Zip file contained no valid sections: check formatting"));
 					}
-					this.sectionDataSets.push(newDataFrame);
+					this.dataSets.push(newDataFrame);
 					let dataFrameIDs = [];
-					for (let df of this.sectionDataSets) {
+					for (let df of this.dataSets) {
 						dataFrameIDs.push(df.getID());
 					}
 					// NOTE: should we be doing any error handling with writing to disk...
@@ -209,9 +212,9 @@ export default class DataProcessor {
 			return Promise.reject(new InsightError("Invalid ID format"));
 		}
 		return new Promise<string>((resolve, reject) => {
-			for (let dataSetIndex in this.sectionDataSets) {
-				if (this.sectionDataSets[dataSetIndex].getID() === id) {
-					this.sectionDataSets.splice(Number(dataSetIndex), 1); // Remove from program memory
+			for (let dataSetIndex in this.dataSets) {
+				if (this.dataSets[dataSetIndex].getID() === id) {
+					this.dataSets.splice(Number(dataSetIndex), 1); // Remove from program memory
 					fs.removeSync("./data/" + id + ".json"); // Remove from disk memory
 					resolve(id);
 				}
@@ -222,7 +225,7 @@ export default class DataProcessor {
 
 	public listDatasets(): Promise<InsightDataset[]> {
 		let result: InsightDataset[] = [];
-		for (let dataSet of this.sectionDataSets) {
+		for (let dataSet of this.dataSets) {
 			result.push({
 				id: dataSet.getID(),
 				kind: dataSet.getKind(),

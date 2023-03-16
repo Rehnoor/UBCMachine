@@ -1,4 +1,4 @@
-import {SectionDataSet, Section} from "./InsightDataFrame";
+import {Room, Section} from "./InsightDataFrame";
 
 export abstract class Node {
 	private children: Node[];
@@ -13,7 +13,9 @@ export abstract class Node {
 	}
 
 	public abstract nodeMessage(): string;
-	public abstract validateSection(section: Section): boolean;
+
+	// TODO: sorry my bad had to change signature for linter, gonna need some instanceof checks?
+	public abstract validateSection(section: Section | Room): boolean;
 
 	public addChild(child: Node) {
 		this.children.push(child);

@@ -43,8 +43,8 @@ export default class InsightFacade implements IInsightFacade {
 	}
 
 	private frameIDMatch(treeID: string): boolean {
-		for (let x in this.dataProcessor.sectionDataSets) {
-			if (this.dataProcessor.sectionDataSets[x].getID() === treeID) {
+		for (let x in this.dataProcessor.dataSets) {
+			if (this.dataProcessor.dataSets[x].getID() === treeID) {
 				return true;
 			}
 		}
@@ -114,7 +114,7 @@ export default class InsightFacade implements IInsightFacade {
 						return Promise.reject(new InsightError("Entered dataid is not valid"));
 					}
 					let dataIDForQuery: string = this.queryEngine.getDataID(queryTree);
-					for (let dataFrame of this.dataProcessor.sectionDataSets) {
+					for (let dataFrame of this.dataProcessor.dataSets) {
 						if (dataFrame.getID() === dataIDForQuery) {
 							// perform query on dataframe
 							// return the result
@@ -136,11 +136,11 @@ export default class InsightFacade implements IInsightFacade {
 	private validateColumnsAndOrder(optionsVal: object, columnList: string[], orderVal: any) {
 		if (Object.keys(optionsVal).includes("ORDER")) {
 			// it is ordered
-			if(!this.queryEngine.isValidColumnsWOrder(columnList, this.dataProcessor.sectionDataSets, orderVal)) {
+			if(!this.queryEngine.isValidColumnsWOrder(columnList, this.dataProcessor.dataSets, orderVal)) {
 				throw new InsightError("Column or order arguments are invalid");
 			}
 		} else { // no order
-			if (!this.queryEngine.isValidColumns(columnList, this.dataProcessor.sectionDataSets)) {
+			if (!this.queryEngine.isValidColumns(columnList, this.dataProcessor.dataSets)) {
 				throw new InsightError("Column arguments are invalid");
 			}
 		}
