@@ -213,7 +213,7 @@ export default class HTMLTableBuilder {
 							return this.geoFetcher.getCoordinates(building.address);
 						}
 					}).then((buildingCoordinates) => {
-						if (!buildingCoordinates || buildingCoordinates.error) {
+						if (buildingCoordinates === undefined || buildingCoordinates.error) {
 							console.error("error retrieving building coordinates");
 							return [];
 						}
