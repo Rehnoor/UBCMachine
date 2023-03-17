@@ -9,12 +9,9 @@ export default class DataProcessor {
 
 	private tableBuilder = new HTMLTableBuilder();
 
-	// TODO: refactor to just have one array of type DataSet
-
 	public readonly dataSets: DataSet[];
 
 	constructor() {
-		// TODO: store rooms and sections in separate subfolders of data directory
 		this.dataSets = [];
 		fs.ensureDirSync("./data/");
 		let fileNames = fs.readdirSync("./data/");
@@ -122,12 +119,6 @@ export default class DataProcessor {
 
 
 	private addRoomDataSet(id: string, content: string): Promise<string[]> {
-		// TODO: REFACTOR! this is clearly duplicate of addDataset with sections -> refactor
-		for (let dataSet of this.dataSets) {
-			if (dataSet.getID() === id) {
-				return Promise.reject(new InsightError("This ID has already been added"));
-			}
-		}
 		return zip.loadAsync(content, {base64: true}).then(async (fileData) => {
 			const htmlText = await fileData.file("index.htm")?.async("string");
 			if (htmlText === null || htmlText === undefined) {
@@ -152,8 +143,6 @@ export default class DataProcessor {
 			// now we have the correct table
 			const buildings = this.tableBuilder.parseBuildingTable(tableNode);
 			let newDataFrame = new DataSet(id, InsightDatasetKind.Rooms);
-			// console.log(buildings);
-			// now use the buildings links and metadata to find Rooms tables and create rooms
 			let buildingRoomsArray = await this.tableBuilder.parseRoomFiles(buildings, fileData);
 			let rooms: Room[] = [];
 			for (let buildingRooms of buildingRoomsArray) {
@@ -163,10 +152,13 @@ export default class DataProcessor {
 				newDataFrame.addRow(room);
 			}
 			if (newDataFrame.getNumRows() > 0) {
-				console.log(newDataFrame);
-				// add dataFrame to this.roomDataSets
-				// persist to disk
-				// resolve with list of all currently added IDs
+				this.dataSets.push(newDataFrame);
+				fs.outputJsonSync("./data/" + id + ".json", newDataFrame);
+				let dataFrameIDs = [];
+				for (let df of this.dataSets) {
+					dataFrameIDs.push(df.getID());
+				}
+				return Promise.resolve(dataFrameIDs);
 			}
 			return Promise.reject(new InsightError("Dataset in zipfile contained no valid rooms"));
 		});
@@ -176,13 +168,13 @@ export default class DataProcessor {
 		if (!this.validateID(id)) {
 			return Promise.reject(new InsightError("Invalid ID parameter"));
 		}
-		if (kind === InsightDatasetKind.Rooms) {
-			return this.addRoomDataSet(id, content);
-		}
 		for (let dataSet of this.dataSets) {
 			if (dataSet.getID() === id) {
 				return Promise.reject(new InsightError("This ID has already been added"));
 			}
+		}
+		if (kind === InsightDatasetKind.Rooms) {
+			return this.addRoomDataSet(id, content);
 		}
 		let newDataFrame = new DataSet(id, kind);
 		return new Promise<string[]>((resolve, reject) => {

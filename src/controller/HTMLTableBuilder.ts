@@ -2,7 +2,7 @@ import {Room} from "./InsightDataFrame";
 import JSZip from "jszip";
 import {parse} from "parse5";
 import {BuildingTableRow, RoomTableRow} from "./HTMLTableRow";
-import GeoFetcher, {GeoResponse} from "./GeoLocator";
+import GeoFetcher from "./GeoLocator";
 
 
 export default class HTMLTableBuilder {
@@ -35,11 +35,9 @@ export default class HTMLTableBuilder {
 		}
 		for (let val of Object.values(roomTableRow)) {
 			if (val === undefined) {
-				// console.log("room table is invalid");
 				return false;
 			}
 		}
-		// console.log("room table is valid");
 		return true;
 	}
 
@@ -126,7 +124,6 @@ export default class HTMLTableBuilder {
 
 	// pass in <table> html node
 	private validateRoomTable(htmlNode: any): boolean {
-		// console.log("entering Room table validation");
 		if (!htmlNode || !htmlNode.nodeName || htmlNode.nodeName !== "table") {
 			return false;
 		}
@@ -145,8 +142,6 @@ export default class HTMLTableBuilder {
 			return undefined;
 		}
 		if (htmlNode.nodeName === "table") {
-			// console.log("found a table!");
-			// validate this table (does it have all required keys)
 			if (tableType === "building") {
 				if (this.validateBuildingTable(htmlNode)) {
 					return htmlNode;

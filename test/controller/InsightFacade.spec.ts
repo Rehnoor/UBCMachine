@@ -131,6 +131,12 @@ describe("InsightFacade", function () {
 				expect(result.length).to.deep.equal(2);
 				expect(result).to.have.members(["ubc-data0", "ubc-data1"]);
 			});
+			// ////////////////// START OF NEW TESTS FOR ROOMS DATASETS ///////////////////////////////
+			it("should reject Room dset with no index.htm", function() {
+				let badZip = getContentFromArchives("ubcBuildings.zip");
+				const result = facade.addDataset("rooms", badZip, InsightDatasetKind.Rooms);
+				return expect(result).to.eventually.be.rejectedWith(InsightError);
+			});
 		});
 		describe("removeDataset", function () {
 			it("should reject remove invalid ID (empty string)", function () {
@@ -293,11 +299,21 @@ describe("InsightFacade", function () {
 			return expect(result).to.eventually.deep.equal(["shouldPersist"]);
 			// this is where the system "crashes" and we should ensure dataset remains
 		});
+		it("should add rooms dataset + persist", function () {
+			facade = new InsightFacade();
+			const result = facade.addDataset("roomSet", rooms, InsightDatasetKind.Rooms);
+			return expect(result).to.eventually.deep.equal(["shouldPersist", "roomSet"]);
+		});
 		// NOTE: for this test to pass, must run the whole SaveToDisk describe at once
 		it("should have the previously added dataset", function () {
 			facade = new InsightFacade();
 			const result = facade.listDatasets();
 			return expect(result).to.eventually.deep.equal([
+				{
+					id: "roomSet",
+					kind: InsightDatasetKind.Rooms,
+					numRows: 363,
+				},
 				{
 					id: "shouldPersist",
 					kind: InsightDatasetKind.Sections,
