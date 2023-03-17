@@ -64,7 +64,6 @@ export default class HTMLTableBuilder {
 		if (tbody === undefined || tbody.childNodes === undefined) {
 			return [];
 		}
-		console.log("entered parseBuildingTable");
 		let buildings: BuildingTableRow[] = [];
 		for (let rowData of tbody.childNodes) {
 			if (rowData.nodeName !== undefined && rowData.nodeName === "tr" && rowData.childNodes !== undefined) {

@@ -105,6 +105,10 @@ describe("InsightFacade", function () {
 				const result = facade.addDataset("1288", sections, InsightDatasetKind.Rooms);
 				return expect(result).to.eventually.be.rejectedWith(InsightError);
 			});
+			it("should reject add with kind == Sections but type == rooms", function() {
+				const result = facade.addDataset("notsure", rooms, InsightDatasetKind.Sections);
+				return expect(result).to.eventually.be.rejectedWith(InsightError);
+			});
 			it("should reject add with duplicate ID", function () {
 				const result = facade
 					.addDataset("ubc123", smallDataset, InsightDatasetKind.Sections)
@@ -136,6 +140,11 @@ describe("InsightFacade", function () {
 				let badZip = getContentFromArchives("ubcBuildings.zip");
 				const result = facade.addDataset("rooms", badZip, InsightDatasetKind.Rooms);
 				return expect(result).to.eventually.be.rejectedWith(InsightError);
+			});
+			it("should add dataset with some bad links in index.htm", function () {
+				let zip = getContentFromArchives("notAllLinked.zip");
+				const result = facade.addDataset("rooms", zip, InsightDatasetKind.Rooms);
+				return expect(result).to.eventually.deep.equal(["rooms"]);
 			});
 		});
 		describe("removeDataset", function () {
