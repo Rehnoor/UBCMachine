@@ -21,11 +21,13 @@ describe("InsightFacade", function () {
 	// Declare datasets used in tests. You should add more datasets like this!
 	let sections: string;
 	let smallDataset: string;
+	let rooms: string;
 
 	before(function () {
 		// This block runs once and loads the datasets.
 		sections = getContentFromArchives("pair.zip");
 		smallDataset = getContentFromArchives("smallValidSet.zip");
+		rooms = getContentFromArchives("campus.zip");
 		// Just in case there is anything hanging around from a previous run of the test suite
 		clearDisk();
 	});
@@ -99,8 +101,12 @@ describe("InsightFacade", function () {
 				return expect(result).to.eventually.be.rejectedWith(InsightError);
 			});
 
-			it("should reject add with kind == Rooms (for c0 at least)", function () {
+			it("should reject add with kind == Rooms but type == sections", function () {
 				const result = facade.addDataset("1288", sections, InsightDatasetKind.Rooms);
+				return expect(result).to.eventually.be.rejectedWith(InsightError);
+			});
+			it("should reject add with kind == Sections but type == rooms", function() {
+				const result = facade.addDataset("notsure", rooms, InsightDatasetKind.Sections);
 				return expect(result).to.eventually.be.rejectedWith(InsightError);
 			});
 			it("should reject add with duplicate ID", function () {
@@ -118,12 +124,27 @@ describe("InsightFacade", function () {
 				const result = facade.addDataset("smallSet", smallDataset, InsightDatasetKind.Sections);
 				return expect(result).to.eventually.deep.equal(["smallSet"]);
 			});
+			it("should add the full rooms dataset", function() {
+				const result = facade.addDataset("roomSet", rooms, InsightDatasetKind.Rooms);
+				return expect(result).to.eventually.deep.equal(["roomSet"]);
+			});
 
 			it("should add two valid datasets", async function () {
 				await facade.addDataset("ubc-data0", smallDataset, InsightDatasetKind.Sections);
 				const result = await facade.addDataset("ubc-data1", smallDataset, InsightDatasetKind.Sections);
 				expect(result.length).to.deep.equal(2);
 				expect(result).to.have.members(["ubc-data0", "ubc-data1"]);
+			});
+			// ////////////////// START OF NEW TESTS FOR ROOMS DATASETS ///////////////////////////////
+			it("should reject Room dset with no index.htm", function() {
+				let badZip = getContentFromArchives("ubcBuildings.zip");
+				const result = facade.addDataset("rooms", badZip, InsightDatasetKind.Rooms);
+				return expect(result).to.eventually.be.rejectedWith(InsightError);
+			});
+			it("should add dataset with some bad links in index.htm", function () {
+				let zip = getContentFromArchives("notAllLinked.zip");
+				const result = facade.addDataset("rooms", zip, InsightDatasetKind.Rooms);
+				return expect(result).to.eventually.deep.equal(["rooms"]);
 			});
 		});
 		describe("removeDataset", function () {
@@ -287,11 +308,21 @@ describe("InsightFacade", function () {
 			return expect(result).to.eventually.deep.equal(["shouldPersist"]);
 			// this is where the system "crashes" and we should ensure dataset remains
 		});
+		it("should add rooms dataset + persist", function () {
+			facade = new InsightFacade();
+			const result = facade.addDataset("roomSet", rooms, InsightDatasetKind.Rooms);
+			return expect(result).to.eventually.deep.equal(["shouldPersist", "roomSet"]);
+		});
 		// NOTE: for this test to pass, must run the whole SaveToDisk describe at once
 		it("should have the previously added dataset", function () {
 			facade = new InsightFacade();
 			const result = facade.listDatasets();
 			return expect(result).to.eventually.deep.equal([
+				{
+					id: "roomSet",
+					kind: InsightDatasetKind.Rooms,
+					numRows: 363,
+				},
 				{
 					id: "shouldPersist",
 					kind: InsightDatasetKind.Sections,

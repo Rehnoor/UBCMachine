@@ -15,29 +15,58 @@ export class Section {
 	) {}
 }
 
-export class DataFrame {
+export class Room {
+
+	public readonly name: string;
+	constructor(
+		public readonly fullname: string,
+		public readonly shortname: string,
+		public readonly number: string,
+		// public readonly name: string, // should be shortname + "_" + number
+		public readonly address: string,
+		public readonly lat: number,
+		public readonly lon: number,
+		public readonly seats: number,
+		public readonly type: string,
+		public readonly furniture: string,
+		public readonly href: string
+
+	) {
+		this.name = this.shortname + "_" + this.number;
+	}
+}
+
+export class DataSet {
 	private readonly id: string;
-	private numRows: number = 0;
 	private readonly kind: InsightDatasetKind;
-	private readonly sections: Section[] = [];
+	private numRows: number = 0;
+
+	private readonly rows: Array<Section | Room>;
+
 	constructor(id: string, kind: InsightDatasetKind) {
+		this.rows = [];
 		this.id = id;
 		this.kind = kind;
 	}
-	public addSection(section: Section) {
-		this.sections.push(section);
-		this.numRows++;
-	}
+
 	public getNumRows(): number {
 		return this.numRows;
 	}
+
 	public getID(): string {
 		return this.id;
 	}
+
 	public getKind(): InsightDatasetKind {
 		return this.kind;
 	}
-	public getSections(): Section[] {
-		return this.sections;
+
+	public addRow(row: Section | Room) {
+		this.rows.push(row);
+		this.numRows++;
+	};
+
+	public getRows(): Array<Section | Room> {
+		return this.rows;
 	}
 }
