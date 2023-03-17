@@ -10,9 +10,11 @@ export default class HTMLTableBuilder {
 	private geoFetcher = new GeoFetcher();
 
 	private isValidBuildingTable(htmlNode: any): boolean {
-		if (!htmlNode || !htmlNode.nodeName || htmlNode.nodeName !== "tr" || !htmlNode.childNodes) {
+		if (htmlNode === undefined || htmlNode.nodeName === undefined || htmlNode.nodeName !== "tr" ||
+			htmlNode.childNodes === undefined) {
 			return false;
 		}
+		// htmlNode is a <tr>
 		let buildingTableRow = new BuildingTableRow();
 		for (let tableData of htmlNode.childNodes) {
 			buildingTableRow.handleTD(tableData);
@@ -26,7 +28,8 @@ export default class HTMLTableBuilder {
 	}
 
 	private isValidRoomTable(htmlNode: any): boolean {
-		if (!htmlNode || !htmlNode.nodeName || htmlNode.nodeName !== "tr" || !htmlNode.childNodes) {
+		if (htmlNode === undefined || htmlNode.nodeName === undefined || htmlNode.nodeName !== "tr" ||
+			htmlNode.childNodes === undefined) {
 			return false;
 		}
 		let roomTableRow = new RoomTableRow();
@@ -43,7 +46,8 @@ export default class HTMLTableBuilder {
 
 	// RETURNS: undefined if <tbody> is not found
 	public getTableBody(tableNode: any): any {
-		if (!tableNode || !tableNode.nodeName || tableNode.nodeName !== "table" || !tableNode.childNodes) {
+		if (tableNode === undefined || tableNode.nodeName === undefined || tableNode.nodeName !== "table" ||
+			tableNode.childNodes === undefined) {
 			console.error("did not pass a tableNode to getTableBody");
 			return undefined;
 		}
@@ -113,7 +117,6 @@ export default class HTMLTableBuilder {
 
 	// pass in a <table> html node
 	private validateBuildingTable(htmlNode: any): boolean {
-		console.log("entering Building table validation");
 		let tableRow = this.getFirstTableRow(htmlNode);
 		if (tableRow === undefined || tableRow.childNodes === undefined) {
 			return false;
@@ -123,7 +126,7 @@ export default class HTMLTableBuilder {
 
 	// pass in <table> html node
 	private validateRoomTable(htmlNode: any): boolean {
-		if (!htmlNode || !htmlNode.nodeName || htmlNode.nodeName !== "table") {
+		if (htmlNode === undefined || htmlNode.nodeName === undefined || htmlNode.nodeName !== "table") {
 			return false;
 		}
 		let tableRow = this.getFirstTableRow(htmlNode);
@@ -137,7 +140,7 @@ export default class HTMLTableBuilder {
 	// Returns undefined if no valid tables exist, if found returns tbody
 	// tableType is one of: "building" | "room"
 	public findValidTable(htmlNode: any, tableType: string): any {
-		if (!htmlNode || !htmlNode.nodeName) {
+		if (htmlNode === undefined || htmlNode.nodeName === undefined) {
 			return undefined;
 		}
 		if (htmlNode.nodeName === "table") {
@@ -196,7 +199,6 @@ export default class HTMLTableBuilder {
 	}
 
 	public parseRoomFiles(buildings: BuildingTableRow[], fileData: JSZip): Promise<Room[][]> {
-		console.log("entered parseRoomFiles");
 		let roomPromises: Array<Promise<Room[]>> = [];
 		for (let building of buildings) {
 			let roomsFromBuilding;
