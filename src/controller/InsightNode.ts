@@ -15,7 +15,7 @@ export abstract class Node {
 	public abstract nodeMessage(): string;
 
 	// TODO: sorry my bad had to change signature for linter, gonna need some instanceof checks?
-	public abstract validateSection(section: Section | Room): boolean;
+	public abstract validateData(section: Section | Room): boolean;
 
 	public addChild(child: Node) {
 		this.children.push(child);
@@ -45,17 +45,17 @@ export class LogicNode extends Node {
 		return "______\nLOGIC NODE WITH TYPE: " + this.type + "\nChildren: ";
 	}
 
-	public validateSection(section: Section): boolean {
+	public validateData(section: Section): boolean {
 		if (this.type === "AND") {
 			for (let c in this.getChildren()) {
-				if (!this.getChildren()[c].validateSection(section)) {
+				if (!this.getChildren()[c].validateData(section)) {
 					return false;
 				}
 			}
 			return true;
 		} else {
 			for (let c in this.getChildren()) {
-				if (this.getChildren()[c].validateSection(section)) {
+				if (this.getChildren()[c].validateData(section)) {
 					return true;
 				}
 			}
@@ -81,21 +81,31 @@ export class MathNode extends Node {
 		return "______\nMATH NODE WITH TYPE: " + this.type + "\nmfield: " + this.mfield + "\nnumber: " + this.num + s;
 	}
 
-	private getMfieldVal(section: Section): number {
-		if (this.mfield === "avg") {
-			return section.avg;
-		} else if (this.mfield === "pass") {
-			return section.pass;
-		} else if (this.mfield === "fail") {
-			return section.fail;
-		} else if (this.mfield === "audit") {
-			return section.audit;
-		} else { // this can only be "year" as inputs have been validated from before
-			return section.year;
+	private getMfieldVal(x: Section | Room): number {
+		if (x instanceof Section) {
+			if (this.mfield === "avg") {
+				return x.avg;
+			} else if (this.mfield === "pass") {
+				return x.pass;
+			} else if (this.mfield === "fail") {
+				return x.fail;
+			} else if (this.mfield === "audit") {
+				return x.audit;
+			} else { // this can only be "year" as inputs have been validated from before
+				return x.year;
+			}
+		} else {
+			if (this.mfield === "lat") {
+				return x.lat;
+			} else if (this.mfield === "lon") {
+				return x.lon;
+			} else {
+				return x.seats;
+			}
 		}
 	}
 
-	public validateSection(section: Section): boolean {
+	public validateData(section: Section): boolean {
 		let sectionVal: number = this.getMfieldVal(section);
 		if (this.type === "LT") {
 			return (sectionVal < this.num);
@@ -122,21 +132,41 @@ export class StringNode extends Node {
 		return "______\nSTRING NODE WITH inputString: " + this.inputString + "\nsfield: " + this.sfield + s;
 	}
 
-	private getSfield(section: Section): string {
-		if (this.sfield === "dept") {
-			return section.dept;
-		} else if (this.sfield === "id") {
-			return section.id;
-		} else if (this.sfield === "instructor") {
-			return section.instructor;
-		} else if (this.sfield === "title") {
-			return section.title;
-		} else { // this can only be "uuid" as inputs have been validated from before
-			return section.uuid;
+	private getSfield(x: Section | Room): string {
+		if (x instanceof Section) {
+			if (this.sfield === "dept") {
+				return x.dept;
+			} else if (this.sfield === "id") {
+				return x.id;
+			} else if (this.sfield === "instructor") {
+				return x.instructor;
+			} else if (this.sfield === "title") {
+				return x.title;
+			} else { // this can only be "uuid" as inputs have been validated from before
+				return x.uuid;
+			}
+		} else {
+			if (this.sfield === "fullname") {
+				return x.fullname;
+			} else if (this.sfield === "shortname") {
+				return x.shortname;
+			} else if (this.sfield === "number") {
+				return x.number;
+			} else if (this.sfield === "name") {
+				return x.name;
+			} else if (this.sfield === "address") {
+				return x.address;
+			} else if (this.sfield === "type") {
+				return x.type;
+			} else if (this.sfield === "furniture") {
+				return x.furniture;
+			} else {
+				return x.href;
+			}
 		}
 	}
 
-	public validateSection(section: Section): boolean {
+	public validateData(section: Section): boolean {
 		let sectionVal: string = this.getSfield(section);
 		if (this.inputString.includes("*")) {
 			if (this.inputString[0] === "*" && this.inputString[this.inputString.length - 1] === "*") { // contains
@@ -163,8 +193,8 @@ export class NegationNode extends Node {
 		return "______\nNEGATION NODE WITH PREVIOUS NODE BEING INTERNAL FILTER";
 	}
 
-	public validateSection(section: Section): boolean {
-		return !this.getChildren()[0].validateSection(section);
+	public validateData(section: Section): boolean {
+		return !this.getChildren()[0].validateData(section);
 	}
 }
 
@@ -181,7 +211,7 @@ export class EmptyNode extends Node {
 		return "";
 	}
 
-	public validateSection(section: Section): boolean {
+	public validateData(section: Section): boolean {
 		return true;
 	}
 }

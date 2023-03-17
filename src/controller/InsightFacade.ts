@@ -11,6 +11,7 @@ import {
 } from "./IInsightFacade";
 import {LogicNode, MathNode, Node, StringNode} from "./InsightNode";
 import {QueryEngine} from "./QueryEngine";
+import {QueryValidator} from "./QueryValidator";
 import DataProcessor from "./DataProcessor";
 
 /**
@@ -21,9 +22,11 @@ import DataProcessor from "./DataProcessor";
 export default class InsightFacade implements IInsightFacade {
 	private dataProcessor: DataProcessor;
 	private readonly queryEngine: QueryEngine;
+	private readonly queryValidator: QueryValidator;
 	constructor() {
 		this.queryEngine = new QueryEngine();
 		this.dataProcessor = new DataProcessor();
+		this.queryValidator = new QueryValidator();
 	}
 
 	public addDataset(id: string, content: string, kind: InsightDatasetKind): Promise<string[]> {
@@ -97,6 +100,8 @@ export default class InsightFacade implements IInsightFacade {
 					return Promise.reject(new InsightError("COLUMNS section must have at least one key"));
 				}
 				let columnList: string[] = Object.values(columnsVal);
+				// ***********TRANSFORMATIONS STUFF***********
+				let transformationsBlockVals: any = topLevelVals[Object.keys(query).indexOf("TRANSFORMATIONS")];
 				// ***********OPTIONS STUFF***********
 				let orderIndex: number = Object.keys(optionsVal).indexOf("ORDER");
 				let orderVal: any = Object.values(optionsVal)[orderIndex];
@@ -118,7 +123,8 @@ export default class InsightFacade implements IInsightFacade {
 						if (dataFrame.getID() === dataIDForQuery) {
 							// perform query on dataframe
 							// return the result
-							let result = this.queryEngine.runQuery(dataFrame, queryTree, columnList, orderVal);
+							let result = this.queryEngine.runQuery(dataFrame, queryTree, columnList, orderVal,
+								transformationsBlockVals);
 							return Promise.resolve(result);
 						}
 					}

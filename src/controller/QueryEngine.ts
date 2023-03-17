@@ -1,8 +1,17 @@
 import {EmptyNode, LogicNode, MathNode, NegationNode, Node, StringNode} from "./InsightNode";
 import {InsightError, InsightResult, ResultTooLargeError} from "./IInsightFacade";
-import {DataSet} from "./InsightDataFrame";
+import {DataSet, Room, Section} from "./InsightDataFrame";
+import {QueryValidator} from "./QueryValidator";
+import {QueryResult} from "./QueryResult";
 
 export class QueryEngine {
+	private qr: QueryResult;
+	private qv: QueryValidator;
+	constructor() {
+		this.qr = new QueryResult();
+		this.qv = new QueryValidator();
+	}
+
 	public isLogicComparison(key: any): boolean {
 		return key === "AND" || key === "OR";
 	}
@@ -20,11 +29,12 @@ export class QueryEngine {
 	}
 
 	public validateSField(sfield: string) {
-		return ["dept", "id", "instructor", "title", "uuid"].includes(sfield);
+		return ["dept", "id", "instructor", "title", "uuid", "fullname", "shortname", "number",
+			"name", "address", "type", "furniture", "href"].includes(sfield);
 	}
 
 	public validateMField(mfield: string) {
-		return ["avg", "pass", "fail", "audit", "year"].includes(mfield);
+		return ["avg", "pass", "fail", "audit", "year", "lat", "lon", "seats"].includes(mfield);
 	}
 
 	private handleLogicComparison(query: any, key: any): Node{
@@ -207,25 +217,31 @@ export class QueryEngine {
 	// THROWS: ResultTooLargeError
 	// NOTE: columns are still in format "idstring_(m | s)field"
 	public runQuery(dataFrame: DataSet, queryTree: Node, columns: string[],
-		order: string | undefined): InsightResult[] {
+		order: string | undefined, transformations: object | undefined): InsightResult[] {
 		// TOO MANY PARAMS
 		let insightArray: InsightResult[] = [];
 		let resultCounter = 0;
-		for (const section of dataFrame.getRows()) {
-			if (queryTree.validateSection(section)) {
+		let groupList: Room[][] | Section[][] = [];
+		for (const data of dataFrame.getRows()) {
+			if (queryTree.validateData(data)) {
 				resultCounter += 1;
 				if (resultCounter > 5000) {
 					throw new ResultTooLargeError("Queries only support results length <= 5000 ");
 				}
+				if (transformations !== undefined) {
+					groupList = this.qr.updateGroupList(data, groupList,
+						Object.values(transformations)[Object.keys(transformations).indexOf("GROUP")]);
+				}
 				let insightResult: InsightResult = {};
 				for (let key of columns) {
 					// Pretty sure we can assume that the columns are valid (ie they have good ids and underscores)???
-					let sectionKey = key.split("_", 2)[1]; // to get mfield or sfield
-					insightResult[key] = (section as any)[sectionKey]; // bad way to do this
+					let dataKey = key.split("_", 2)[1]; // to get mfield or sfield
+					insightResult[key] = (data as any)[dataKey]; // bad way to do this
 				}
 				insightArray.push(insightResult);
 			}
 		}
+
 		if (order !== undefined) {
 			insightArray.sort((a, b) => {
 				if (a[order] < b[order]) {
