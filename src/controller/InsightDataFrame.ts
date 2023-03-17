@@ -1,6 +1,11 @@
 import {InsightDatasetKind} from "./IInsightFacade";
-
-export class Section {
+export abstract class Row {
+	public readonly rowType: string;
+	constructor(rowType: string) {
+		this.rowType = rowType;
+	}
+}
+export class Section extends Row {
 	constructor(
 		public readonly uuid: string,
 		public readonly id: string,
@@ -12,10 +17,12 @@ export class Section {
 		public readonly pass: number,
 		public readonly fail: number,
 		public readonly audit: number
-	) {}
+	) {
+		super("section");
+	}
 }
 
-export class Room {
+export class Room extends Row{
 
 	public readonly name: string;
 	constructor(
@@ -32,6 +39,7 @@ export class Room {
 		public readonly href: string
 
 	) {
+		super("room");
 		this.name = this.shortname + "_" + this.number;
 	}
 }

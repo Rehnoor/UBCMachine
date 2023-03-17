@@ -1,6 +1,6 @@
 import {EmptyNode, LogicNode, MathNode, NegationNode, Node, StringNode} from "./InsightNode";
 import {InsightError, InsightResult, ResultTooLargeError} from "./IInsightFacade";
-import {DataSet, Room, Section} from "./InsightDataFrame";
+import {DataSet, Room, Row, Section} from "./InsightDataFrame";
 import {QueryValidator} from "./QueryValidator";
 import {QueryResult} from "./QueryResult";
 
@@ -221,7 +221,7 @@ export class QueryEngine {
 		// TOO MANY PARAMS
 		let insightArray: InsightResult[] = [];
 		let resultCounter = 0;
-		let groupList: Room[][] | Section[][] = [];
+		let groupList: Row[][] = [];
 		for (const data of dataFrame.getRows()) {
 			if (queryTree.validateData(data)) {
 				resultCounter += 1;
@@ -231,17 +231,22 @@ export class QueryEngine {
 				if (transformations !== undefined) {
 					groupList = this.qr.updateGroupList(data, groupList,
 						Object.values(transformations)[Object.keys(transformations).indexOf("GROUP")]);
+				} else {
+					let insightResult: InsightResult = {};
+					for (let key of columns) {
+						// Pretty sure we can assume that the columns are valid (ie they have good ids and underscores)???
+						let dataKey = key.split("_", 2)[1]; // to get mfield or sfield
+						insightResult[key] = (data as any)[dataKey]; // bad way to do this
+					}
+					insightArray.push(insightResult);
 				}
-				let insightResult: InsightResult = {};
-				for (let key of columns) {
-					// Pretty sure we can assume that the columns are valid (ie they have good ids and underscores)???
-					let dataKey = key.split("_", 2)[1]; // to get mfield or sfield
-					insightResult[key] = (data as any)[dataKey]; // bad way to do this
-				}
-				insightArray.push(insightResult);
 			}
 		}
-
+		// TODO: uncomment after done APPLY
+		// if (transformations !== undefined) {
+		// 	insightArray = this.qr.applyAndAddColumns(groupList, columns,
+		// 		Object.values(transformations)[Object.keys(transformations).indexOf("APPLY")]);
+		// }
 		if (order !== undefined) {
 			insightArray.sort((a, b) => {
 				if (a[order] < b[order]) {
