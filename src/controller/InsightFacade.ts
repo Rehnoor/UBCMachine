@@ -147,7 +147,6 @@ export default class InsightFacade implements IInsightFacade {
 				throw new InsightError("Column arguments are invalid");
 			}
 		}
-
 	}
 
 	public listDatasets(): Promise<InsightDataset[]> {
