@@ -83,35 +83,33 @@ export default class InsightFacade implements IInsightFacade {
 		if (query === null) {
 			return Promise.reject(new InsightError("Query can not be null"));
 		} else if (typeof query === "object") {
-			let invalidBlocks: boolean = Object.keys(query).length !== 2;
+			let invalidBlocks: boolean = Object.keys(query).length < 2 || Object.keys(query).length > 3;
 			if (Object.keys(query).includes("WHERE") && Object.keys(query).includes("OPTIONS") && !invalidBlocks) {
 				let whereBlockIndex = Object.keys(query).indexOf("WHERE");
 				let optionsBlockIndex = Object.keys(query).indexOf("OPTIONS");
 				let topLevelVals = Object.values(query);
 				let optionsVal: any = topLevelVals[optionsBlockIndex];
-				// NO COLUMNS BLOCK
-				if (!Object.keys(optionsVal).includes("COLUMNS")) {
-					return Promise.reject(new InsightError("Valid query must include COLUMNS portion"));
-				}
 				let columnsIndex: number = Object.keys(optionsVal).indexOf("COLUMNS");
 				let columnsVal: any = Object.values(optionsVal)[columnsIndex];
 				// COLUMNS IS EMPTY
-				if (Object.values(columnsVal).length === 0) {
-					return Promise.reject(new InsightError("COLUMNS section must have at least one key"));
+				if (Object.values(columnsVal).length === 0 || !Object.keys(optionsVal).includes("COLUMNS")) {
+					return Promise.reject(new InsightError("Invalid columns block"));
 				}
 				let columnList: string[] = Object.values(columnsVal);
 				// ***********TRANSFORMATIONS STUFF***********
-				let transformationsBlockVals: any = topLevelVals[Object.keys(query).indexOf("TRANSFORMATIONS")];
+				let transformationsBlockVals: any;
+				if (Object.keys(query).indexOf("TRANSFORMATIONS") !== -1) {
+					transformationsBlockVals = topLevelVals[Object.keys(query).indexOf("TRANSFORMATIONS")];
+				}
 				// ***********OPTIONS STUFF***********
 				let orderIndex: number = Object.keys(optionsVal).indexOf("ORDER");
 				let orderVal: any = Object.values(optionsVal)[orderIndex];
 				try {
-					this.validateColumnsAndOrder(optionsVal, columnList, orderVal);
+					this.validateOptionsAndTransformations(optionsVal, columnList, orderVal,
+						transformationsBlockVals);
 				} catch (e) {
 					return Promise.reject(e);
 				}
-				// ***********************************
-				// ************WHERE STUFF***********
 				let whereVal: any = topLevelVals[whereBlockIndex];
 				try {
 					let queryTree: Node = this.queryEngine.buildWhereTree(whereVal, columnList);
@@ -121,8 +119,6 @@ export default class InsightFacade implements IInsightFacade {
 					let dataIDForQuery: string = this.queryEngine.getDataID(queryTree);
 					for (let dataFrame of this.dataProcessor.dataSets) {
 						if (dataFrame.getID() === dataIDForQuery) {
-							// perform query on dataframe
-							// return the result
 							let result = this.queryEngine.runQuery(dataFrame, queryTree, columnList, orderVal,
 								transformationsBlockVals);
 							return Promise.resolve(result);
@@ -131,25 +127,27 @@ export default class InsightFacade implements IInsightFacade {
 				}  catch (e) {
 					return Promise.reject(e);
 				}
-			} else {
-				return Promise.reject(new InsightError("Query must have only WHERE and OPTIONS block"));
 			}
 		}
 		return Promise.reject(new InsightError("query must be of type object"));
 	}
 
 	// THROWS: InsightError
-	private validateColumnsAndOrder(optionsVal: object, columnList: string[], orderVal: any) {
+	private validateOptionsAndTransformations(optionsVal: object, columnList: string[], orderVal: any,
+												   transformationVal: any) {
 		if (Object.keys(optionsVal).includes("ORDER")) {
 			// it is ordered
-			if(!this.queryEngine.isValidColumnsWOrder(columnList, this.dataProcessor.dataSets, orderVal)) {
+			if(!this.queryEngine.isValidColumnsWOrder(columnList, this.dataProcessor.dataSets, orderVal,
+				transformationVal)) {
 				throw new InsightError("Column or order arguments are invalid");
 			}
 		} else { // no order
-			if (!this.queryEngine.isValidColumns(columnList, this.dataProcessor.dataSets)) {
+			if (!this.queryEngine.isValidColumns(columnList, this.dataProcessor.dataSets, transformationVal,
+				orderVal)) {
 				throw new InsightError("Column arguments are invalid");
 			}
 		}
+
 	}
 
 	public listDatasets(): Promise<InsightDataset[]> {

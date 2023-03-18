@@ -1,8 +1,14 @@
 import {InsightError, InsightResult} from "./IInsightFacade";
 import {Room, Row, Section} from "./InsightDataFrame";
 import Decimal from "decimal.js";
+import {QueryResultHelper} from "./QueryResultHelper";
 
 export class QueryResult {
+	private qrh: QueryResultHelper;
+	constructor() {
+		this.qrh = new QueryResultHelper();
+	}
+
 	public getInsightResult(insightArray: InsightResult[], transformations: object): InsightResult[] {
 		return [];
 	}
@@ -13,20 +19,24 @@ export class QueryResult {
 			retVal = [[newData]];
 		} else {
 			retVal = groupList;
-			retVal.forEach((item) => {
+			for (let item of retVal) {
+				let matchesAllFields: boolean = true;
 				for (const g in groups) {
-					if (this.matching(item[0], g, newData)) {
-						item.push(newData);
-					}
+					matchesAllFields = this.matching(item[0], g, newData) && matchesAllFields;
 				}
-			});
+				if (matchesAllFields) {
+					item.push(newData);
+					break;
+				}
+			}
+			retVal.push([newData]);
 		}
 		return retVal;
 	}
 
 	private matching(item: Row, group: string, data: Row): boolean {
+		let field: string = group.split("_", 2)[1];
 		if (item instanceof Room && data instanceof Room) {
-			let field: string = group.split("_", 2)[1];
 			if (field === "fullname") {
 				return (item.fullname === data.fullname);
 			} else if (field === "shortname") {
@@ -45,11 +55,11 @@ export class QueryResult {
 				return (item.type === data.type);
 			} else if (field === "furniture") {
 				return (item.furniture === data.furniture);
-			} else {
-				return (item.href === data.href);
+			} else if (field === "name") {
+				return (item.name === data.name);
 			}
+			return (item.href === data.href && field === "href");
 		} else if (item instanceof Section && data instanceof Section) {
-			let field: string = group.split("_", 2)[1];
 			if (field === "uuid") {
 				return (item.uuid === data.uuid);
 			} else if (field === "id") {
@@ -68,11 +78,11 @@ export class QueryResult {
 				return (item.pass === data.pass);
 			} else if (field === "fail") {
 				return (item.fail === data.fail);
-			} else {
-				return (item.audit === data.audit);
 			}
+			return (item.audit === data.audit && field === "audit");
+		} else {
+			throw new InsightError("breh");
 		}
-		throw new InsightError("breh");
 	}
 
 	public applyAndAddColumns(groupList: Row[][], columns: string[], applyVal: any): InsightResult[] {
@@ -91,192 +101,58 @@ export class QueryResult {
 							let applyToken: any = Object.keys(applyBody)[0];
 							let keyToApplyTo: any = Object.values(applyBody)[0];
 							let r: any = this.handleApply(applyToken, keyToApplyTo, item);
+							x[key] = r;
 						}
 					}
 				}
 			}
+			result.push(x);
 		});
-		return [];
+		return result;
 	}
 
 	private handleApply(applyToken: any, keyToApplyTo: any, group: Row[]): number {
 		if (applyToken === "MAX") {
-			return this.handleMax(keyToApplyTo, group);
+			return this.qrh.handleMax(keyToApplyTo, group);
 		} else if (applyToken === "MIN") {
-			return this.handleMin(keyToApplyTo, group);
+			return this.qrh.handleMin(keyToApplyTo, group);
 		} else if (applyToken === "AVG") {
-			return this.handleAvg(keyToApplyTo, group);
+			return this.qrh.handleAvg(keyToApplyTo, group);
 		} else if (applyToken === "COUNT") {
-			return this.handleCount(keyToApplyTo, group);
+			return this.qrh.handleCount(keyToApplyTo, group);
 		} else { // assumes token is SUM
-			return this.handleSum(keyToApplyTo, group);
+			return this.qrh.handleSum(keyToApplyTo, group);
 		}
 	}
 
-	private handleMax(keyToApplyTo: any, group: Row[]): number {
-		let maxSoFar: number = -1;
-		group.forEach((item) => {
-			if (item instanceof Section) {
-				if (keyToApplyTo === "year") {
-					if (item.year > maxSoFar) {
-						maxSoFar = item.year;
-					}
-				} else if (keyToApplyTo === "avg") {
-					if (item.avg > maxSoFar) {
-						maxSoFar = item.avg;
-					}
-				} else if (keyToApplyTo === "pass") {
-					if (item.pass > maxSoFar) {
-						maxSoFar = item.pass;
-					}
-				} else if (keyToApplyTo === "fail") {
-					if (item.fail > maxSoFar) {
-						maxSoFar = item.fail;
-					}
-				} else {
-					if (item.audit > maxSoFar) {
-						maxSoFar = item.audit;
+	public handleCustomOrder(order: any, ir: InsightResult[]): InsightResult[] {
+		let dir: any = Object.values(order)[Object.keys(order).indexOf("dir")];
+		let keyList: any = Object.values(order)[Object.keys(order).indexOf("keys")];
+		if (dir === "UP") {
+			ir.sort((a, b) => {
+				for (let k in keyList) {
+					if (a[k] < b[k]) {
+						return -1;
+					} else if (a[k] > b[k]) {
+						return 1;
 					}
 				}
-			} else if (item instanceof Room) {
-				if (keyToApplyTo === "lat") {
-					if (item.lat > maxSoFar) {
-						maxSoFar = item.lat;
-					}
-				} else if (keyToApplyTo === "lon") {
-					if (item.lon > maxSoFar) {
-						maxSoFar = item.lon;
-					}
-				} else if (keyToApplyTo === "seats") {
-					if (item.seats > maxSoFar) {
-						maxSoFar = item.seats;
+				return 0;
+			});
+		} else if (dir === "DOWN") {
+			ir.sort((a, b) => {
+				for (let k in keyList) {
+					if (a[k] > b[k]) {
+						return -1;
+					} else if (a[k] < b[k]) {
+						return 1;
 					}
 				}
-			}
-		});
-		return maxSoFar;
+				return 0;
+			});
+		} else {
+			throw new InsightError("Invalid dir field in ORDER");
+		}
+		return ir;
 	}
-
-	private handleMin(keyToApplyTo: any, group: Row[]): number {
-		let minSoFar: number = Number.MAX_VALUE;
-		group.forEach((item) => {
-			if (item instanceof Section) {
-				if (keyToApplyTo === "year") {
-					if (item.year < minSoFar) {
-						minSoFar = item.year;
-					}
-				} else if (keyToApplyTo === "avg") {
-					if (item.avg < minSoFar) {
-						minSoFar = item.avg;
-					}
-				} else if (keyToApplyTo === "pass") {
-					if (item.pass < minSoFar) {
-						minSoFar = item.pass;
-					}
-				} else if (keyToApplyTo === "fail") {
-					if (item.fail < minSoFar) {
-						minSoFar = item.fail;
-					}
-				} else {
-					if (item.audit < minSoFar) {
-						minSoFar = item.audit;
-					}
-				}
-			} else if (item instanceof Room) {
-				if (keyToApplyTo === "lat") {
-					if (item.lat < minSoFar) {
-						minSoFar = item.lat;
-					}
-				} else if (keyToApplyTo === "lon") {
-					if (item.lon < minSoFar) {
-						minSoFar = item.lon;
-					}
-				} else if (keyToApplyTo === "seats") {
-					if (item.seats < minSoFar) {
-						minSoFar = item.seats;
-					}
-				}
-			}
-		});
-		return minSoFar;
-	}
-
-	private handleAvg(keyToApplyTo: any, group: Row[]): number {
-		let numRows: number = group.length;
-		let total: Decimal = new Decimal(0);
-		group.forEach((item) => {
-			if (item instanceof Section) {
-				if (keyToApplyTo === "year") {
-					total.add(item.year);
-				} else if (keyToApplyTo === "avg") {
-					total.add(item.avg);
-				} else if (keyToApplyTo === "pass") {
-					total.add(item.pass);
-				} else if (keyToApplyTo === "fail") {
-					total.add(item.fail);
-				} else {
-					total.add(item.audit);
-				}
-			} else if (item instanceof Room) {
-				if (keyToApplyTo === "lat") {
-					total.add(item.lat);
-				} else if (keyToApplyTo === "lon") {
-					total.add(item.lon);
-				} else if (keyToApplyTo === "seats") {
-					total.add(item.seats);
-				}
-			}
-		});
-		let avg = total.toNumber() / numRows;
-		return Number(avg.toFixed(2));
-	}
-
-	private handleCount(keyToApplyTo: any, group: Row[]): number {
-		// let count: number = 0;
-		// group.forEach((item) => {
-		// 	if (item instanceof Section) {
-		// 		if (keyToApplyTo === "uuid") {
-		// 			if (item.uuid > maxSoFar) {
-		// 				maxSoFar = item.year;
-		// 			}
-		// 		} else if (keyToApplyTo === "avg") {
-		// 			if (item.avg > maxSoFar) {
-		// 				maxSoFar = item.avg;
-		// 			}
-		// 		} else if (keyToApplyTo === "pass") {
-		// 			if (item.pass > maxSoFar) {
-		// 				maxSoFar = item.pass;
-		// 			}
-		// 		} else if (keyToApplyTo === "fail") {
-		// 			if (item.fail > maxSoFar) {
-		// 				maxSoFar = item.fail;
-		// 			}
-		// 		} else {
-		// 			if (item.audit > maxSoFar) {
-		// 				maxSoFar = item.audit;
-		// 			}
-		// 		}
-		// 	} else if (item instanceof Room) {
-		// 		if (keyToApplyTo === "lat") {
-		// 			if (item.lat > maxSoFar) {
-		// 				maxSoFar = item.lat;
-		// 			}
-		// 		} else if (keyToApplyTo === "lon") {
-		// 			if (item.lon > maxSoFar) {
-		// 				maxSoFar = item.lon;
-		// 			}
-		// 		} else if (keyToApplyTo === "seats") {
-		// 			if (item.seats > maxSoFar) {
-		// 				maxSoFar = item.seats;
-		// 			}
-		// 		}
-		// 	}
-		// });
-		return 0;
-	}
-
-	private handleSum(keyToApplyTo: any, group: Row[]): number {
-		return 0;
-	}
-
 }

@@ -30,7 +30,7 @@ export class QueryEngine {
 
 	public validateSField(sfield: string) {
 		return ["dept", "id", "instructor", "title", "uuid", "fullname", "shortname", "number",
-			"name", "address", "type", "furniture", "href"].includes(sfield);
+			"name", "address", "type", "furniture", "href", "name"].includes(sfield);
 	}
 
 	public validateMField(mfield: string) {
@@ -171,7 +171,7 @@ export class QueryEngine {
 		return true;
 	}
 
-	public isValidColumns(columnList: any, dataFrames: DataSet[]): boolean {
+	public isValidColumns(columnList: any, dataFrames: DataSet[], transformationVal: any, orderVal: any): boolean {
 		let col: string = columnList[0];
 		let colDataID: string = col.split("_", 2)[0];
 		let dataIDFound: boolean = false;
@@ -195,8 +195,9 @@ export class QueryEngine {
 		return true;
 	}
 
-	public isValidColumnsWOrder(columnList: any, dataFrames: DataSet[], orderVal: any): boolean {
-		let colVerification: boolean = this.isValidColumns(columnList, dataFrames);
+	public isValidColumnsWOrder(columnList: any, dataFrames: DataSet[], orderVal: any,
+		transformationVal: any): boolean {
+		let colVerification: boolean = this.isValidColumns(columnList, dataFrames, transformationVal, orderVal);
 		let foundMatchingColumn: boolean = false;
 		for (let c in columnList) {
 			if (orderVal === columnList[c]) {
@@ -217,7 +218,7 @@ export class QueryEngine {
 	// THROWS: ResultTooLargeError
 	// NOTE: columns are still in format "idstring_(m | s)field"
 	public runQuery(dataFrame: DataSet, queryTree: Node, columns: string[],
-		order: string | undefined, transformations: object | undefined): InsightResult[] {
+		order: any | undefined, transformations: any | undefined): InsightResult[] {
 		// TOO MANY PARAMS
 		let insightArray: InsightResult[] = [];
 		let resultCounter = 0;
@@ -225,9 +226,6 @@ export class QueryEngine {
 		for (const data of dataFrame.getRows()) {
 			if (queryTree.validateData(data)) {
 				resultCounter += 1;
-				if (resultCounter > 5000) {
-					throw new ResultTooLargeError("Queries only support results length <= 5000 ");
-				}
 				if (transformations !== undefined) {
 					groupList = this.qr.updateGroupList(data, groupList,
 						Object.values(transformations)[Object.keys(transformations).indexOf("GROUP")]);
@@ -242,21 +240,29 @@ export class QueryEngine {
 				}
 			}
 		}
-		// TODO: uncomment after done APPLY
-		// if (transformations !== undefined) {
-		// 	insightArray = this.qr.applyAndAddColumns(groupList, columns,
-		// 		Object.values(transformations)[Object.keys(transformations).indexOf("APPLY")]);
-		// }
+		if (transformations !== undefined) {
+			insightArray = this.qr.applyAndAddColumns(groupList, columns,
+				Object.values(transformations)[Object.keys(transformations).indexOf("APPLY")]);
+		}
 		if (order !== undefined) {
-			insightArray.sort((a, b) => {
-				if (a[order] < b[order]) {
-					return -1;
-				}
-				if (a[order] > b[order]) {
-					return 1;
-				}
-				return 0;
-			});
+			if (Object.keys(order).includes("dir") && Object.keys(order).includes("keys")) {
+				insightArray = this.qr.handleCustomOrder(order, insightArray);
+			} else if (!Object.keys(order).includes("dir") && !Object.keys(order).includes("keys")) {
+				insightArray.sort((a, b) => {
+					if (a[order] < b[order]) {
+						return -1;
+					}
+					if (a[order] > b[order]) {
+						return 1;
+					}
+					return 0;
+				});
+			} else {
+				throw new InsightError("invalid order");
+			}
+		}
+		if (insightArray.length > 5000) {
+			throw new ResultTooLargeError("Queries only support results length <= 5000 ");
 		}
 		return insightArray;
 	}

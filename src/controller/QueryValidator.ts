@@ -1,3 +1,4 @@
-export class QueryValidator {
+import {InsightError} from "./IInsightFacade";
 
+export class QueryValidator {
 }
