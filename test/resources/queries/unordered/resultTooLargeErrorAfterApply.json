@@ -1,0 +1,26 @@
+{
+	"title": "resultTooLargeErrorAfterApply",
+	"input": {
+		"WHERE": {},
+		"OPTIONS": {
+			"COLUMNS": [
+				"sections_uuid",
+				"numOccurrence"
+			]
+		},
+		"TRANSFORMATIONS": {
+			"GROUP": [
+				"sections_uuid"
+			],
+			"APPLY": [
+				{
+					"numOccurrence": {
+						"COUNT": "sections_uuid"
+					}
+				}
+			]
+		}
+	},
+	"errorExpected": true,
+	"expected": "ResultTooLargeError"
+}

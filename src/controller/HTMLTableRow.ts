@@ -27,7 +27,7 @@ export class BuildingTableRow {
 		if (tableNode === undefined || tableNode.nodeName === undefined || tableNode.nodeName !== "td") {
 			return;
 		}
-		if (!tableNode.attrs) {
+		if (tableNode.attrs === undefined) {
 			return;
 		}
 		for (let attribute of tableNode.attrs) {
@@ -64,7 +64,8 @@ export class BuildingTableRow {
 
 	// Checks whether all fields have been instantiated
 	public hasAllFields(): boolean {
-		return !!(this.image && this.code && this.fullname && this.address && this.nothing);
+		return (this.image !== undefined && this.code !== undefined && this.fullname !== undefined
+			&& this.address !== undefined && this.nothing !== undefined);
 	}
 
 }
@@ -78,7 +79,6 @@ export class RoomTableRow {
 	public roomType: string | undefined = undefined;
 	public nothingLink: string | undefined = undefined;
 
-	// TODO: hopefully these are the same format as the buildings
 	private getTDTextContent(tableNode: any): string {
 		return tableNode.childNodes[0].value.trim();
 	}
@@ -95,7 +95,7 @@ export class RoomTableRow {
 		if (tableNode === undefined || tableNode.nodeName === undefined || tableNode.nodeName !== "td") {
 			return;
 		}
-		if (!tableNode.attrs) {
+		if (tableNode.attrs === undefined) {
 			return;
 		}
 		for (let attribute of tableNode.attrs) {
@@ -132,7 +132,7 @@ export class RoomTableRow {
 
 	// Checks whether all fields have been instantiated
 	public hasAllFields(): boolean {
-		return !!(this.roomNumber && this.roomNumberLink && this.capacity && this.furniture && this.roomType &&
-		this.nothingLink);
+		return (this.roomNumber !== undefined && this.roomNumberLink !== undefined && this.capacity !== undefined
+			&& this.furniture !== undefined && this.roomType !== undefined && this.nothingLink !== undefined);
 	}
 }
