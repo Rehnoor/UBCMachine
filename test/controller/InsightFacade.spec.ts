@@ -135,7 +135,7 @@ describe("InsightFacade", function () {
 				expect(result.length).to.deep.equal(2);
 				expect(result).to.have.members(["ubc-data0", "ubc-data1"]);
 			});
-			// ////////////////// START OF NEW TESTS FOR ROOMS DATASETS ///////////////////////////////
+			// TODO: ////////////////// START OF NEW TESTS FOR ROOMS DATASETS ///////////////////////////////
 			it("should reject Room dset with no index.htm", function() {
 				let badZip = getContentFromArchives("ubcBuildings.zip");
 				const result = facade.addDataset("rooms", badZip, InsightDatasetKind.Rooms);
@@ -145,6 +145,16 @@ describe("InsightFacade", function () {
 				let zip = getContentFromArchives("notAllLinked.zip");
 				const result = facade.addDataset("rooms", zip, InsightDatasetKind.Rooms);
 				return expect(result).to.eventually.deep.equal(["rooms"]);
+			});
+			it("should add rooms dataset where index table is not first table", function () {
+				let zip = getContentFromArchives("badFirstTable.zip");
+				const result = facade.addDataset("rooms", zip, InsightDatasetKind.Rooms);
+				return expect(result).to.eventually.deep.equal(["rooms"]);
+			});
+			it("should reject add rooms dataset where index table missing img column", function () {
+				let zip = getContentFromArchives("badIndex.zip");
+				const result = facade.addDataset("rooms", zip, InsightDatasetKind.Rooms);
+				return expect(result).to.eventually.be.rejectedWith(InsightError);
 			});
 		});
 		describe("removeDataset", function () {
@@ -207,6 +217,23 @@ describe("InsightFacade", function () {
 						id: "dset1",
 						kind: InsightDatasetKind.Sections,
 						numRows: 16,
+					},
+				]);
+			});
+			it("should fulfill with 2 added datasets of both kinds", async function() {
+				await facade.addDataset("dset1", smallDataset, InsightDatasetKind.Sections);
+				await facade.addDataset("dset2", rooms, InsightDatasetKind.Rooms);
+				const result = facade.listDatasets();
+				return expect(result).eventually.to.deep.equal([
+					{
+						id: "dset1",
+						kind: InsightDatasetKind.Sections,
+						numRows: 16,
+					},
+					{
+						id: "dset2",
+						kind: InsightDatasetKind.Rooms,
+						numRows: 364
 					},
 				]);
 			});
@@ -321,7 +348,7 @@ describe("InsightFacade", function () {
 				{
 					id: "roomSet",
 					kind: InsightDatasetKind.Rooms,
-					numRows: 363,
+					numRows: 364,
 				},
 				{
 					id: "shouldPersist",
@@ -351,4 +378,5 @@ describe("InsightFacade", function () {
 			});
 		});
 	});
+	// TODO: make a new folderTest to accurately test custom orderings
 });
