@@ -105,8 +105,7 @@ export default class InsightFacade implements IInsightFacade {
 				let orderIndex: number = Object.keys(optionsVal).indexOf("ORDER");
 				let orderVal: any = Object.values(optionsVal)[orderIndex];
 				try {
-					this.validateOptionsAndTransformations(optionsVal, columnList, orderVal,
-						transformationsBlockVals);
+					this.doSmtg(transformationsBlockVals, optionsVal, columnList, orderVal);
 				} catch (e) {
 					return Promise.reject(e);
 				}
@@ -130,6 +129,13 @@ export default class InsightFacade implements IInsightFacade {
 			}
 		}
 		return Promise.reject(new InsightError("query must be of type object"));
+	}
+
+	private doSmtg(transformationsBlockVals: any, optionsVal: object, columnList: string[], orderVal: any) {
+		if (transformationsBlockVals === undefined) {
+			this.validateOptionsAndTransformations(optionsVal, columnList, orderVal,
+				transformationsBlockVals);
+		}
 	}
 
 	// THROWS: InsightError

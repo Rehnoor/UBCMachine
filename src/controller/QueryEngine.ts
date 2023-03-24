@@ -221,11 +221,9 @@ export class QueryEngine {
 		order: any | undefined, transformations: any | undefined): InsightResult[] {
 		// TOO MANY PARAMS
 		let insightArray: InsightResult[] = [];
-		let resultCounter = 0;
 		let groupList: Row[][] = [];
 		for (const data of dataFrame.getRows()) {
 			if (queryTree.validateData(data)) {
-				resultCounter += 1;
 				if (transformations !== undefined) {
 					groupList = this.qr.updateGroupList(data, groupList,
 						Object.values(transformations)[Object.keys(transformations).indexOf("GROUP")]);
@@ -241,6 +239,7 @@ export class QueryEngine {
 			}
 		}
 		if (transformations !== undefined) {
+			// console.log(Object.values(transformations)[Object.keys(transformations).indexOf("APPLY")]);
 			insightArray = this.qr.applyAndAddColumns(groupList, columns,
 				Object.values(transformations)[Object.keys(transformations).indexOf("APPLY")]);
 		}

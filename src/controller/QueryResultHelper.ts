@@ -105,25 +105,25 @@ export class QueryResultHelper {
 		group.forEach((item) => {
 			if (item instanceof Section) {
 				if (keyToApplyTo === "year") {
-					total.add(item.year);
+					total = total.add(new Decimal(item.year));
 				} else if (keyToApplyTo === "avg") {
-					total.add(item.avg);
+					total = total.add(new Decimal(item.avg));
 				} else if (keyToApplyTo === "pass") {
-					total.add(item.pass);
+					total = total.add(new Decimal(item.pass));
 				} else if (keyToApplyTo === "fail") {
-					total.add(item.fail);
+					total = total.add(new Decimal(item.fail));
 				} else if (keyToApplyTo === "audit") {
-					total.add(item.audit);
+					total = total.add(new Decimal(item.audit));
 				} else {
 					throw new InsightError("Invalid key for AVG");
 				}
 			} else if (item instanceof Room) {
 				if (keyToApplyTo === "lat") {
-					total.add(item.lat);
+					total = total.add(new Decimal(item.lat));
 				} else if (keyToApplyTo === "lon") {
-					total.add(item.lon);
+					total = total.add(new Decimal(item.lon));
 				} else if (keyToApplyTo === "seats") {
-					total.add(item.seats);
+					total = total.add(new Decimal(item.seats));
 				} else {
 					throw new InsightError("Invalid key for AVG");
 				}
