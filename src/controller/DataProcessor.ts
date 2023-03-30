@@ -194,6 +194,7 @@ export default class DataProcessor {
 					resolve(dataFrameIDs);
 				})
 				.catch((error) => {
+					console.error(error);
 					reject(new InsightError("An error occurred during parsing process"));
 				});
 		});
