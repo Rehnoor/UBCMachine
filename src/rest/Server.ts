@@ -98,14 +98,17 @@ export default class Server {
 	private async deleteDataset(req: Request, res: Response) {
 		try {
 			console.log(`Server::deleteDataset(..) - params: ${JSON.stringify(req.params)}`);
-			const resultBody = await this.facade.removeDataset(req.params.id); // TODO: make sure we have req.id
+			const resultBody = await this.facade.removeDataset(req.params.id);
+			console.log("Status: 200");
 			res.status(200).json({result: resultBody});
 		} catch (err) {
 			console.log(err);
 			if (err instanceof NotFoundError) {
-				res.status(404).json({error: String(err.message)});
+				console.log("Status: 404");
+				res.status(404).json({error: err.message});
 			} else {
-				res.status(400).json({error: String((err as any).message)});
+				console.log("Status: 400");
+				res.status(400).json({error: (err as any).message});
 			}
 		}
 	}
@@ -116,18 +119,19 @@ export default class Server {
 	private async putDataset(req: Request, res: Response) {
 		try {
 			console.log(`Server::putDataset(..) - params: ${JSON.stringify(req.params)}`);
-			console.log(req.body);
 			const resultBody = await this.performPutDataSet(req);
+			console.log("Status: 200");
 			res.status(200).json({result: resultBody});
 		} catch (err) {
 			console.log(err);
-			res.status(400).json({error: String((err as any).message)}); // hopefully always have message
+			console.log("Status: 400");
+			res.status(400).json({error: (err as any).message}); // hopefully always have message
 		}
 	}
 
 	private performPutDataSet(req: Request): Promise<string[]> {
-		// TODO: make sure we actually have id, kind, and body in the request
 		let id: string = req.params.id;
+		console.log(req.body);
 		let content: Buffer = req.body;
 		let kind = req.params.kind;
 		if (kind !== InsightDatasetKind.Sections && kind !== InsightDatasetKind.Rooms) {
