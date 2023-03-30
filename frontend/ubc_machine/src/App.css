@@ -1,0 +1,38 @@
+.App {
+  text-align: center;
+}
+.PageTitle {
+	font-family: 'Montserrat', sans-serif;
+	font-size: 1rem;
+	text-align: center;
+	background-color: cornflowerblue;
+	color: white;
+	padding: 1rem;
+	border-bottom-right-radius: 0.5rem;
+	border-bottom-left-radius: 0.5rem;
+	text-shadow: 2px 2px #555;
+}
+
+.AddDatasetButton{
+	background-color: #4CAF50;
+	border: none;
+	color: white;
+	padding: 12px 24px;
+	text-align: center;
+	text-decoration: none;
+	display: inline-block;
+	font-size: 16px;
+	border-radius: 5px;
+	transition-duration: 0.4s;
+	cursor: pointer;
+	box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.3);
+	position: absolute;
+	top: 24%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+}
+
+.AddDatasetButton:hover {
+	background-color: #3e8e41;
+	box-shadow: 0px 12px 20px rgba(0, 0, 0, 0.5);
+}
