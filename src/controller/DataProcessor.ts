@@ -161,6 +161,9 @@ export default class DataProcessor {
 				return Promise.resolve(dataFrameIDs);
 			}
 			return Promise.reject(new InsightError("Dataset in zipfile contained no valid rooms"));
+		}).catch((error) => {
+			console.error(error);
+			return Promise.reject(new InsightError("An error occurred during parsing process"));
 		});
 	}
 
