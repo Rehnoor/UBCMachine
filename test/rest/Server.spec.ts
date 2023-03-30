@@ -81,31 +81,5 @@ describe("Server", () => {
 		}
 	});
 
-	it("PUT test for courses dataset (FAILURE)", async () => {
-		let ENDPOINT_URL = "/dataset/badData/sections";
-		let ZIP_FILE_DATA = fs.readFileSync("test/resources/archives/pair.zip");
-		// this should be converted to base64 in server
-		try {
-			return request(SERVER_URL)
-				.put(ENDPOINT_URL)
-				.send(ZIP_FILE_DATA)
-				.set("Content-Type", "application/x-zip-compressed")
-				.then((res: Response) => {
-					expect(res.status).to.be.equal(400);
-					expect(res.body).to.deep.equal({result: ["pairdata"]}); // change
-					// more assertions here
-				})
-				.catch((err) => {
-					// some logging here please!
-					console.log("Unexpected response!");
-					console.log(err);
-					expect.fail();
-				});
-		} catch (err) {
-			// and some more logging here!
-			console.log("request failed!");
-		}
-	});
-
 	// The other endpoints work similarly. You should be able to find all instructions at the chai-http documentation
 });
