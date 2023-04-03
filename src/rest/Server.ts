@@ -15,6 +15,7 @@ export default class Server {
 		console.info(`Server::<init>( ${port} )`);
 		this.port = port;
 		this.express = express();
+		// this.express.use("file");
 		this.facade = new InsightFacade();
 		this.registerMiddleware();
 		this.registerRoutes();
@@ -131,7 +132,7 @@ export default class Server {
 
 	private performPutDataSet(req: Request): Promise<string[]> {
 		let id: string = req.params.id;
-		console.log(req.body);
+		// console.log(req.body);
 		let content: Buffer = req.body;
 		let kind = req.params.kind;
 		if (kind !== InsightDatasetKind.Sections && kind !== InsightDatasetKind.Rooms) {
