@@ -1,17 +1,21 @@
 import express, {Application, Request, Response} from "express";
 import * as http from "http";
 import cors from "cors";
+import InsightFacade from "../controller/InsightFacade";
+import {InsightDatasetKind, InsightError, NotFoundError} from "../controller/IInsightFacade";
 
 export default class Server {
 	private readonly port: number;
 	private express: Application;
 	private server: http.Server | undefined;
 
+	private facade: InsightFacade; // hopefully static facade is the right approach
+
 	constructor(port: number) {
 		console.info(`Server::<init>( ${port} )`);
 		this.port = port;
 		this.express = express();
-
+		this.facade = new InsightFacade();
 		this.registerMiddleware();
 		this.registerRoutes();
 
@@ -86,7 +90,54 @@ export default class Server {
 		this.express.get("/echo/:msg", Server.echo);
 
 		// TODO: your other endpoints should go here
+		this.express.put("/dataset/:id/:kind", this.putDataset.bind(this));
+		this.express.delete("/dataset/:id", this.deleteDataset.bind(this));
 
+	}
+
+	private async deleteDataset(req: Request, res: Response) {
+		try {
+			console.log(`Server::deleteDataset(..) - params: ${JSON.stringify(req.params)}`);
+			const resultBody = await this.facade.removeDataset(req.params.id);
+			console.log("Status: 200");
+			res.status(200).json({result: resultBody});
+		} catch (err) {
+			console.log(err);
+			if (err instanceof NotFoundError) {
+				console.log("Status: 404");
+				res.status(404).json({error: err.message});
+			} else {
+				console.log("Status: 400");
+				res.status(400).json({error: (err as any).message});
+			}
+		}
+	}
+
+	// use @filepath to upload file from local machine
+	// curl -X PUT -H "Content-Type: application/zip" --data-binary "@filepath"
+	// http://localhost:4321/dataset/courseData/sections
+	private async putDataset(req: Request, res: Response) {
+		try {
+			console.log(`Server::putDataset(..) - params: ${JSON.stringify(req.params)}`);
+			const resultBody = await this.performPutDataSet(req);
+			console.log("Status: 200");
+			res.status(200).json({result: resultBody});
+		} catch (err) {
+			console.log(err);
+			console.log("Status: 400");
+			res.status(400).json({error: (err as any).message}); // hopefully always have message
+		}
+	}
+
+	private performPutDataSet(req: Request): Promise<string[]> {
+		let id: string = req.params.id;
+		console.log(req.body);
+		let content: Buffer = req.body;
+		let kind = req.params.kind;
+		if (kind !== InsightDatasetKind.Sections && kind !== InsightDatasetKind.Rooms) {
+			throw new InsightError("Invalid dataset kind");
+		}
+		return this.facade.addDataset(id, content.toString("base64"), kind);
 	}
 
 	/**
