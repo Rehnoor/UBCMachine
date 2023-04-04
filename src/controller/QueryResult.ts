@@ -97,7 +97,7 @@ export class QueryResult {
 	public applyAndAddColumns(groupList: Row[][], columns: string[], applyVal: any): InsightResult[] {
 		// TODO: check that applykey is shown in columns
 		let result: InsightResult[] = [];
-		groupList.forEach((item) => {
+		for (let item of groupList) {
 			// console.log(groupList);
 			let x: InsightResult = {};
 			for (let key in columns) {
@@ -126,7 +126,7 @@ export class QueryResult {
 				}
 			}
 			result.push(x);
-		});
+		}
 		return result;
 	}
 

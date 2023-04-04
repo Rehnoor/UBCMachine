@@ -101,11 +101,16 @@ export default class InsightFacade implements IInsightFacade {
 				if (Object.keys(query).indexOf("TRANSFORMATIONS") !== -1) {
 					transformationsBlockVals = topLevelVals[Object.keys(query).indexOf("TRANSFORMATIONS")];
 				}
+				console.log(transformationsBlockVals);
+				console.log(Object.values(transformationsBlockVals)
+					[Object.keys(transformationsBlockVals).indexOf("GROUP")]);
 				// ***********OPTIONS STUFF***********
 				let orderIndex: number = Object.keys(optionsVal).indexOf("ORDER");
 				let orderVal: any = Object.values(optionsVal)[orderIndex];
 				try {
-					this.doSmtg(transformationsBlockVals, optionsVal, columnList, orderVal);
+					// this.doSmtg(transformationsBlockVals, optionsVal, columnList, orderVal);
+					// this.queryValidator.validateOptionsAndTransformations(optionsVal, columnList, orderVal,
+					// 	transformationsBlockVals, this.dataProcessor.dataSets);
 				} catch (e) {
 					return Promise.reject(e);
 				}

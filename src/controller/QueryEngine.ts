@@ -6,10 +6,8 @@ import {QueryResult} from "./QueryResult";
 
 export class QueryEngine {
 	private qr: QueryResult;
-	private qv: QueryValidator;
 	constructor() {
 		this.qr = new QueryResult();
-		this.qv = new QueryValidator();
 	}
 
 	public isLogicComparison(key: any): boolean {
@@ -221,12 +219,16 @@ export class QueryEngine {
 		order: any | undefined, transformations: any | undefined): InsightResult[] {
 		// TOO MANY PARAMS
 		let insightArray: InsightResult[] = [];
+		let count: number = 0;
 		let groupList: Row[][] = [];
 		for (const data of dataFrame.getRows()) {
 			if (queryTree.validateData(data)) {
 				if (transformations !== undefined) {
 					groupList = this.qr.updateGroupList(data, groupList,
 						Object.values(transformations)[Object.keys(transformations).indexOf("GROUP")]);
+					if (groupList.length > 5000) {
+						throw new ResultTooLargeError("Queries only support results length <= 5000 ");
+					}
 				} else {
 					let insightResult: InsightResult = {};
 					for (let key of columns) {
@@ -238,6 +240,7 @@ export class QueryEngine {
 				}
 			}
 		}
+		console.log("yo we got everything");
 		if (transformations !== undefined) {
 			// console.log(Object.values(transformations)[Object.keys(transformations).indexOf("APPLY")]);
 			insightArray = this.qr.applyAndAddColumns(groupList, columns,
