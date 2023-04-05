@@ -19,17 +19,26 @@ export class QueryResult {
 			retVal = [[newData]];
 		} else {
 			retVal = groupList;
+			let foundCol: boolean = false;
 			for (let item of retVal) {
+				// console.log(item[0]);
 				let matchesAllFields: boolean = true;
-				for (const g in groups) {
-					matchesAllFields = this.matching(item[0], g, newData) && matchesAllFields;
+				// console.log(groups);
+				for (let g in groups) {
+					matchesAllFields = this.matching(item[0], groups[g], newData) && matchesAllFields;
+					// console.log(groups[g]);
+					// matchesAllFields = this.matching(item[0], groups[g], newData);
 				}
 				if (matchesAllFields) {
 					item.push(newData);
+					foundCol = true;
 					break;
 				}
 			}
-			retVal.push([newData]);
+			// console.log("yo");
+			if (!foundCol) {
+				retVal.push([newData]);
+			}
 		}
 		return retVal;
 	}
@@ -88,30 +97,42 @@ export class QueryResult {
 	public applyAndAddColumns(groupList: Row[][], columns: string[], applyVal: any): InsightResult[] {
 		// TODO: check that applykey is shown in columns
 		let result: InsightResult[] = [];
-		groupList.forEach((item) => {
+		for (let item of groupList) {
+			// console.log(groupList);
 			let x: InsightResult = {};
 			for (let key in columns) {
-				if (key.includes("_")) {
-					let dataKey = key.split("_", 2)[1];
-					x[key] = (item[0] as any)[dataKey];
+				// console.log(key);
+				if (columns[key].includes("_")) {
+					let dataKey = columns[key].split("_", 2)[1];
+					x[columns[key]] = (item[0] as any)[dataKey];
 				} else {
 					for (const y in applyVal) {
-						if (Object.keys(y).includes(key)) {
-							let applyBody: any = Object.values(y[0]);
+						// console.log(applyVal); // [ { overallAvg: { AVG: 'sections_avg' } } ]
+						if (Object.keys(applyVal[y]).includes(columns[key])) {
+							let d: any = applyVal[y];
+							// console.log(d); // { overallAvg: { AVG: 'sections_avg' } }
+							// console.log(columns[key]); // overallAvg
+							let applyBody: any = Object.values(d)[0];
+							// console.log(applyBody); // { AVG: 'sections_avg' }
 							let applyToken: any = Object.keys(applyBody)[0];
+							// console.log(applyToken); // AVG
 							let keyToApplyTo: any = Object.values(applyBody)[0];
+							// console.log(keyToApplyTo); // sections_avg
 							let r: any = this.handleApply(applyToken, keyToApplyTo, item);
-							x[key] = r;
+							// console.log(r);
+							x[columns[key]] = r;
 						}
 					}
 				}
 			}
 			result.push(x);
-		});
+		}
 		return result;
 	}
 
 	private handleApply(applyToken: any, keyToApplyTo: any, group: Row[]): number {
+		// console.log(applyToken);
+		keyToApplyTo = keyToApplyTo.split("_", 2)[1];
 		if (applyToken === "MAX") {
 			return this.qrh.handleMax(keyToApplyTo, group);
 		} else if (applyToken === "MIN") {
@@ -120,8 +141,10 @@ export class QueryResult {
 			return this.qrh.handleAvg(keyToApplyTo, group);
 		} else if (applyToken === "COUNT") {
 			return this.qrh.handleCount(keyToApplyTo, group);
-		} else { // assumes token is SUM
+		} else if (applyToken === "SUM") { // assumes token is SUM
 			return this.qrh.handleSum(keyToApplyTo, group);
+		} else {
+			throw new InsightError("Invalid APPLYKEY");
 		}
 	}
 

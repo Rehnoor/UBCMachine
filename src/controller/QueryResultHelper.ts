@@ -5,7 +5,7 @@ import {InsightError} from "./IInsightFacade";
 export class QueryResultHelper {
 	public handleMax(keyToApplyTo: any, group: Row[]): number {
 		let maxSoFar: number = -1;
-		group.forEach((item) => {
+		for (let item of group) {
 			if (item instanceof Section) {
 				if (keyToApplyTo === "year") {
 					if (item.year > maxSoFar) {
@@ -47,13 +47,13 @@ export class QueryResultHelper {
 					throw new InsightError("Invalid key for MAX");
 				}
 			}
-		});
+		}
 		return maxSoFar;
 	}
 
 	public handleMin(keyToApplyTo: any, group: Row[]): number {
 		let minSoFar: number = Number.MAX_VALUE;
-		group.forEach((item) => {
+		for (let item of group) {
 			if (item instanceof Section) {
 				if (keyToApplyTo === "year") {
 					if (item.year < minSoFar) {
@@ -95,40 +95,40 @@ export class QueryResultHelper {
 					throw new InsightError("Invalid key for MAX");
 				}
 			}
-		});
+		}
 		return minSoFar;
 	}
 
 	public handleAvg(keyToApplyTo: any, group: Row[]): number {
 		let numRows: number = group.length;
 		let total: Decimal = new Decimal(0);
-		group.forEach((item) => {
+		for (let item of group) {
 			if (item instanceof Section) {
 				if (keyToApplyTo === "year") {
-					total.add(item.year);
+					total = total.add(new Decimal(item.year));
 				} else if (keyToApplyTo === "avg") {
-					total.add(item.avg);
+					total = total.add(new Decimal(item.avg));
 				} else if (keyToApplyTo === "pass") {
-					total.add(item.pass);
+					total = total.add(new Decimal(item.pass));
 				} else if (keyToApplyTo === "fail") {
-					total.add(item.fail);
+					total = total.add(new Decimal(item.fail));
 				} else if (keyToApplyTo === "audit") {
-					total.add(item.audit);
+					total = total.add(new Decimal(item.audit));
 				} else {
 					throw new InsightError("Invalid key for AVG");
 				}
 			} else if (item instanceof Room) {
 				if (keyToApplyTo === "lat") {
-					total.add(item.lat);
+					total = total.add(new Decimal(item.lat));
 				} else if (keyToApplyTo === "lon") {
-					total.add(item.lon);
+					total = total.add(new Decimal(item.lon));
 				} else if (keyToApplyTo === "seats") {
-					total.add(item.seats);
+					total = total.add(new Decimal(item.seats));
 				} else {
 					throw new InsightError("Invalid key for AVG");
 				}
 			}
-		});
+		}
 		let avg = total.toNumber() / numRows;
 		return Number(avg.toFixed(2));
 	}
@@ -194,7 +194,7 @@ export class QueryResultHelper {
 	public handleCount(keyToApplyTo: any, group: Row[]): number {
 		let count: number = 0;
 		let seenSoFar: any[] = [];
-		group.forEach((item) => {
+		for (let item of group) {
 			if (item instanceof Section) {
 				if (this.sectionNumberUnique(keyToApplyTo, seenSoFar, item) ||
 					this.sectionStringUnique(keyToApplyTo, seenSoFar, item)) {
@@ -208,13 +208,13 @@ export class QueryResultHelper {
 					seenSoFar.push(item);
 				}
 			}
-		});
+		}
 		return 0;
 	}
 
 	public handleSum(keyToApplyTo: any, group: Row[]): number {
 		let total: number = 0;
-		group.forEach((item) => {
+		for (let item of group) {
 			if (item instanceof Section) {
 				if (keyToApplyTo === "year") {
 					total += item.year;
@@ -240,7 +240,7 @@ export class QueryResultHelper {
 					throw new InsightError("Invalid key for SUM");
 				}
 			}
-		});
+		}
 		return Number(total.toFixed(2));
 	}
 }
