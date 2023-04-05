@@ -5,6 +5,7 @@ import {deflateRaw} from "zlib";
 
 export class QueryValidator {
 	private qe: QueryEngine;
+
 	constructor() {
 		this.qe = new QueryEngine();
 	}
@@ -31,6 +32,7 @@ export class QueryValidator {
 				dataIDFound = true;
 			}
 		}
+		console.log(dataIDFound + "in validColumns");
 		if (!dataIDFound || !this.dataIDConsistencyCheck(columnList)) {
 			return false;
 		}
@@ -47,8 +49,9 @@ export class QueryValidator {
 	}
 
 	private isValidColumnsWOrder(columnList: any, dataFrames: DataSet[], orderVal: any,
-		transformationVal: any): boolean {
+								 transformationVal: any): boolean {
 		let colVerification: boolean = this.isValidColumns(columnList, dataFrames, transformationVal, orderVal);
+		console.log(colVerification);
 		let foundMatchingColumn: boolean = false;
 		for (let c in columnList) {
 			if (orderVal === columnList[c]) {
@@ -59,25 +62,33 @@ export class QueryValidator {
 	}
 
 	private validateGrouping(gVal: any, dataFrames: DataSet[]): boolean {
+		console.log("yo hello");
 		let l: string[] = gVal;
-		if (typeof gVal[0] === "string") {
+		console.log(gVal);
+		if (typeof gVal[0] !== "undefined") {
 			let found: boolean = false;
 			for (let x of l) {
+				console.log(x);
 				let dataID: string = x.split("_", 2)[0]; // dataid
+				console.log(dataID);
 				for (let y in dataFrames) {
+					console.log(dataFrames[y].getID());
 					if (dataFrames[y].getID() === dataID) {
 						found = true;
 					}
 				}
 				if (!found) {
+					console.log("not found");
 					return false;
 				}
 				if (this.qe.validateSField(x.split("_", 2)[1]) ||
 					this.qe.validateMField(x.split("_", 2)[1])) {
 					return true;
 				}
+				console.log("mfield/sfield validation didnt work");
 			}
 		}
+		console.log("isnt string");
 		return false;
 	}
 
@@ -88,13 +99,23 @@ export class QueryValidator {
 			if (!this.validateGrouping(Object.values(tVal)[Object.keys(tVal).indexOf("GROUP")], dataframes)) {
 				throw new InsightError("Grouping requirements are invalid");
 			}
-
+			let applyList: string[] = Object.values(tVal)[Object.keys(tVal).indexOf("APPLY")];
+			let result: string[] = [];
+			for (let x of applyList) {
+				if (result.includes(Object.keys(x)[0])) {
+					throw new InsightError("Applykey is not unique");
+				}
+				result.push(Object.keys(x)[0]);
+			}
+			let gList: string[] = Object.values(tVal)[Object.keys(tVal).indexOf("GROUP")];
+			result = result.concat(gList);
+			return result;
 		}
-		return [];
 	}
 
 	public validateOptionsAndTransformations(optionsVal: object, columnList: string[], orderVal: any,
-											  transformationVal: any, dataFrames: DataSet[]) {
+											 transformationVal: any, dataFrames: DataSet[]) {
+		console.log(dataFrames);
 		if (transformationVal === undefined) {
 			if (Object.keys(optionsVal).includes("ORDER")) {
 				// it is ordered
@@ -110,6 +131,12 @@ export class QueryValidator {
 			}
 		} else {
 			let customColumns: string[] = this.getCustomCols(transformationVal, dataFrames);
+			for (let col of columnList) {
+				if (!customColumns.includes(col)) {
+					throw new InsightError("Keys in COLUMNS must be in GROUP or APPLY when TRANSFORMATIONS is present");
+				}
+			}
 		}
 	}
+
 }

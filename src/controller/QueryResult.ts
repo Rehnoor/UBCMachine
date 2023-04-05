@@ -141,8 +141,10 @@ export class QueryResult {
 			return this.qrh.handleAvg(keyToApplyTo, group);
 		} else if (applyToken === "COUNT") {
 			return this.qrh.handleCount(keyToApplyTo, group);
-		} else { // assumes token is SUM
+		} else if (applyToken === "SUM") { // assumes token is SUM
 			return this.qrh.handleSum(keyToApplyTo, group);
+		} else {
+			throw new InsightError("Invalid APPLYKEY");
 		}
 	}
 
