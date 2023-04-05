@@ -93,7 +93,28 @@ export default class Server {
 		// TODO: your other endpoints should go here
 		this.express.put("/dataset/:id/:kind", this.putDataset.bind(this));
 		this.express.delete("/dataset/:id", this.deleteDataset.bind(this));
+		this.express.post("/query", this.postQuery.bind(this));
+		this.express.get("/datasets", this.getDataSets.bind(this));
+	}
 
+	private async postQuery(req: Request, res: Response) {
+		try {
+			console.log(`Server::postQuery(..) - params: ${req.body}`);
+			const resultBody = await this.facade.performQuery(req.body);
+			console.log("Status: 200");
+			res.status(200).json({result: resultBody});
+		} catch (err) {
+			console.log(err);
+			console.log("Status: 400");
+			res.status(400).json({error: (err as any).message});
+		}
+	}
+
+	private async getDataSets(req: Request, res: Response) {
+		console.log(`Server::getDataSets(..) - params: ${JSON.stringify(req.params)}`);
+		const resultBody = await this.facade.listDatasets();
+		console.log("Status: 200");
+		res.status(200).json({result: resultBody});
 	}
 
 	private async deleteDataset(req: Request, res: Response) {

@@ -63,11 +63,11 @@ export class QueryValidator {
 
 	private validateGrouping(gVal: any, dataFrames: DataSet[]): boolean {
 		console.log("yo hello");
-		let l: string[] = gVal;
+		let groupList: string[] = gVal;
 		console.log(gVal);
 		if (typeof gVal[0] !== "undefined") {
 			let found: boolean = false;
-			for (let x of l) {
+			for (let x of groupList) {
 				console.log(x);
 				let dataID: string = x.split("_", 2)[0]; // dataid
 				console.log(dataID);
@@ -115,7 +115,6 @@ export class QueryValidator {
 
 	public validateOptionsAndTransformations(optionsVal: object, columnList: string[], orderVal: any,
 											 transformationVal: any, dataFrames: DataSet[]) {
-		console.log(dataFrames);
 		if (transformationVal === undefined) {
 			if (Object.keys(optionsVal).includes("ORDER")) {
 				// it is ordered
