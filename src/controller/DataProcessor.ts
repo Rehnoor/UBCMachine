@@ -185,7 +185,7 @@ export default class DataProcessor {
 				.then((jsonCourseArray) => {
 					this.parseStringDataToSections(jsonCourseArray, newDataFrame);
 					if (newDataFrame.getNumRows() === 0) {
-						reject(new InsightError("Zip file contained no valid sections: check formatting"));
+						throw new InsightError("Zip file contained no valid sections: check formatting");
 					}
 					this.dataSets.push(newDataFrame);
 					let dataFrameIDs = [];

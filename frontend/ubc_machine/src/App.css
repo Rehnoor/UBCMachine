@@ -1,0 +1,61 @@
+.App {
+  text-align: center;
+}
+.PageTitle {
+	font-family: 'Montserrat', sans-serif;
+	font-size: 1rem;
+	text-align: center;
+	background-color: cornflowerblue;
+	color: white;
+	padding: 1rem;
+	text-shadow: 2px 2px #555;
+}
+
+.dropdown {
+	position: relative;
+	display: inline-block;
+}
+
+.dropdown-content {
+	max-height: 0;
+	overflow: hidden;
+	transition: max-height 0.5s ease-out;
+}
+
+.dropdown-content.open {
+	max-height: 200px; /* Set to a high value to allow for dynamic content */
+}
+
+.dropdown-arrow {
+	transform: rotate(0);
+	transition: transform 0.3s ease-out;
+}
+
+.dropdown-content.open ~ .dropdown-arrow {
+	transform: rotate(180deg);
+}
+
+.dropdown-toggle {
+	background-color: cornflowerblue;
+	color: #fff;
+	font-size: 16px;
+	border: none;
+	border-radius: 4px;
+	cursor: pointer;
+	margin-right: 10px;
+	padding: 10px;
+}
+
+.dropdown-toggle:hover {
+	background-color: #003366;
+}
+
+
+.button-band {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	background-color: #0074d9;
+	padding: 10px;
+}
+
