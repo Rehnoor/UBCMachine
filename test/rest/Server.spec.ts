@@ -80,6 +80,28 @@ describe("Server", () => {
 			console.log("request failed!");
 		}
 	});
+	it("GET test for  dataset (SUCCESS)", async () => {
+		let ENDPOINT_URL = "/datasets";
+		// let ZIP_FILE_DATA = fs.readFileSync("test/resources/archives/pair.zip");
+		// this should be converted to base64 in server
+		try {
+			return request(SERVER_URL)
+				.get(ENDPOINT_URL)
+				.then((res: Response) => {
+					expect(res.status).to.be.equal(200);
+					expect(res.body).to.deep.equal({result: [{id: "pairdata", kind: "sections", numRows: 64612}]});
+				})
+				.catch((err) => {
+					// some logging here please!
+					console.log("Shouldnt get a fail");
+					console.log(err);
+					expect.fail();
+				});
+		} catch (err) {
+			// and some more logging here!
+			console.log("Shouldnt get a fail");
+		}
+	});
 
 	// The other endpoints work similarly. You should be able to find all instructions at the chai-http documentation
 });
