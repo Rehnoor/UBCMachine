@@ -99,8 +99,8 @@ export default class Server {
 
 	private async postQuery(req: Request, res: Response) {
 		try {
-			console.log(`Server::postQuery(..) - params: ${JSON.stringify(req.params)}`);
-			const resultBody = await this.facade.performQuery(req.params.id);
+			console.log(`Server::postQuery(..) - params: ${req.body}`);
+			const resultBody = await this.facade.performQuery(req.body);
 			console.log("Status: 200");
 			res.status(200).json({result: resultBody});
 		} catch (err) {
