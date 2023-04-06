@@ -226,7 +226,7 @@ export class QueryEngine {
 				if (transformations !== undefined) {
 					groupList = this.qr.updateGroupList(data, groupList,
 						Object.values(transformations)[Object.keys(transformations).indexOf("GROUP")]);
-					if (groupList.length > 5000) {
+					if (groupList.length > 3000) {
 						throw new ResultTooLargeError("Queries only support results length <= 5000 ");
 					}
 				} else {

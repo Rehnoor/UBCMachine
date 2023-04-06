@@ -2,17 +2,23 @@ import React, {useState} from 'react';
 import './App.css';
 import DatasetUploader from "./Components/DatasetUploader";
 import QuerySubmitForm from "./Components/QuerySubmitForm";
+import DatasetDeleter from "./Components/DatasetDeleter";
 
 function AddDatasetDropdown() {
 
 	const [showingAddDataset, setShowingAddDataset] = useState(false)
 	const [showingQuery, setShowingQuery] = useState(false)
+	const [showingDeleteDataset, setShowingDeleteDataset] = useState(false)
 	const handleAddDatasetToggle = () => {
 		setShowingAddDataset(!showingAddDataset)
 	}
 
 	const handleQueryToggle = () => {
 		setShowingQuery(!showingQuery)
+	}
+
+	const handleDeleteDatasetToggle = () => {
+		setShowingDeleteDataset(!showingDeleteDataset)
 	}
 
 	return (
@@ -22,20 +28,23 @@ function AddDatasetDropdown() {
 				<button className="dropdown-toggle" onClick={handleAddDatasetToggle}>
 					Add Dataset
 				</button>
+				<button className="dropdown-toggle" onClick={handleDeleteDatasetToggle}>
+					Delete Dataset
+				</button>
 				<button className="dropdown-toggle" onClick={handleQueryToggle}>
 					Get Answers
 				</button>
 			</div>
-			<div className={`dropdown-content-container ${showingAddDataset || showingQuery ? "open" : "closed"}`}>
+			<div className={`dropdown-content-container ${showingAddDataset || showingQuery
+			|| showingDeleteDataset? "open" : "closed"}`}>
 				{showingAddDataset && <DatasetUploader />}
 				{showingQuery && <QuerySubmitForm />}
+				{showingDeleteDataset && <DatasetDeleter />}
 			</div>
 		</div>
 
 	);
 }
-
-
 function App() {
 
 	return (
