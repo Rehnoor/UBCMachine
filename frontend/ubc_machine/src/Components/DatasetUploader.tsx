@@ -24,7 +24,7 @@ const DatasetUploader = () => {
 		setType(newType);
 	};
 
-	const handleFileUpload = () => {
+	const handleFileUpload = async () => {
 		if (!file) {
 			// handle error - no file selected
 			// just do nothing or possibly give error message
@@ -47,12 +47,15 @@ const DatasetUploader = () => {
 			body: file
 		};
 
-		fetch(url, options)
-			.then(response => response.json())
-			.then(data => setResponseData(JSON.stringify(data)))
-			.catch(error => {
-				console.log(error)
-			});
+		const response = await fetch(url, options)
+		const json = await response.json();
+
+		if (json.result) {
+			setResponseData(`Success!\nDatasets Available to Query: ${json.result}`)
+		} else {
+			setResponseData(`Failed to Add Dataset:\n${json.error}`)
+		}
+
 	};
 
 	return (
