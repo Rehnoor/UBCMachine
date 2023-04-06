@@ -32,7 +32,6 @@ export class QueryValidator {
 				dataIDFound = true;
 			}
 		}
-		console.log(dataIDFound + "in validColumns");
 		if (!dataIDFound || !this.dataIDConsistencyCheck(columnList)) {
 			return false;
 		}
@@ -51,14 +50,31 @@ export class QueryValidator {
 	private isValidColumnsWOrder(columnList: any, dataFrames: DataSet[], orderVal: any,
 								 transformationVal: any): boolean {
 		let colVerification: boolean = this.isValidColumns(columnList, dataFrames, transformationVal, orderVal);
-		console.log(colVerification);
-		let foundMatchingColumn: boolean = false;
-		for (let c in columnList) {
-			if (orderVal === columnList[c]) {
-				foundMatchingColumn = true;
+		console.log(orderVal);
+		if (!Object.keys(orderVal).includes("dir") && !Object.keys(orderVal).includes("keys")) {
+			let foundMatchingColumn: boolean = false;
+			for (let c in columnList) {
+				if (orderVal === columnList[c]) {
+					foundMatchingColumn = true;
+				}
+			}
+			return foundMatchingColumn && colVerification;
+		} else {
+			let includesDirAndKeys: boolean = Object.keys(orderVal).includes("dir") &&
+				Object.keys(orderVal).includes("keys");
+			if (!includesDirAndKeys) {
+				return false;
+			} else {
+				let dirVal: any = Object.values(orderVal)[Object.keys(orderVal).indexOf("dir")];
+				let validDirVal: boolean = dirVal === "DOWN" || dirVal === "UP";
+				let keysVal: any = Object.values(orderVal)[Object.keys(orderVal).indexOf("keys")];
+				let foundMatchingColumn: boolean = true;
+				for (let key of keysVal) {
+					foundMatchingColumn = foundMatchingColumn && columnList.includes(key);
+				}
+				return validDirVal && foundMatchingColumn;
 			}
 		}
-		return foundMatchingColumn && colVerification;
 	}
 
 	private validateGrouping(gVal: any, dataFrames: DataSet[]): boolean {
