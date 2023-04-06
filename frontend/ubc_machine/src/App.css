@@ -88,6 +88,15 @@
 	margin-bottom: 0;
 }
 
+.content ul {
+	margin-top: 20px;
+	margin-bottom: 20px;
+}
+
+.content li {
+	margin-bottom: 30px;
+}
+
 
 .container {
 	display: flex;

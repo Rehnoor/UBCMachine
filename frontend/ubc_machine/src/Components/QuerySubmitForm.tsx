@@ -31,6 +31,7 @@ const QuerySubmitForm: React.FC = () => {
 			let headerValues = Object.keys(firstResult)
 			setHeaderNames(headerValues)
 			setResponseData("")
+			// setResponseData(JSON.stringify(json.result))
 
 		} catch (err) {
 			setHeaderNames([])
