@@ -163,7 +163,7 @@ export default class DataProcessor {
 			return Promise.reject(new InsightError("Dataset in zipfile contained no valid rooms"));
 		}).catch((error) => {
 			console.error(error);
-			return Promise.reject(new InsightError("An error occurred during parsing process"));
+			return Promise.reject(error);
 		});
 	}
 
@@ -198,7 +198,7 @@ export default class DataProcessor {
 				})
 				.catch((error) => {
 					console.error(error);
-					reject(new InsightError("An error occurred during parsing process"));
+					reject(error);
 				});
 		});
 	}
